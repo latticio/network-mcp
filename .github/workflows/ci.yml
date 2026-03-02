@@ -85,7 +85,7 @@ jobs:
       - name: Verify wheel installs
         run: pip install dist/*.whl
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist/
@@ -148,7 +148,7 @@ jobs:
       - name: Run pip-audit
         run: uv run pip-audit || true
       - name: Upload security reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: security-reports
           path: bandit-report.json
@@ -185,7 +185,7 @@ jobs:
       - name: Generate SBOM
         run: uv run pip install cyclonedx-bom && uv run cyclonedx-py environment -o sbom.json --format json || true
       - name: Upload SBOM
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sbom
           path: sbom.json
