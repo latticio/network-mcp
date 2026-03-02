@@ -409,7 +409,7 @@ uv run ruff check src/        # Lint
 ## Community
 
 - [GitHub Discussions](https://github.com/latticio/network-mcp/discussions) — Questions, ideas, and show-and-tell
-- [Discord](https://discord.gg/latticio) — Real-time chat and support
+- [Discord](https://discord.gg/TUBXHNnb) — Real-time chat and support
 - [Issues](https://github.com/latticio/network-mcp/issues) — Bug reports and feature requests
 
 ## License
