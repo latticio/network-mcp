@@ -1,0 +1,43 @@
+{
+  "hostname": "eos-spine-01",
+  "modelName": "DCS-7280SR-48C6",
+  "version": "4.31.1F",
+  "serialNumber": "SSJ17310456",
+  "uptime": 8640000,
+  "memTotal": 8167048,
+  "memFree": 5242880,
+  "interfaces": {
+    "Ethernet1": {
+      "lineProtocolStatus": "up",
+      "interfaceStatus": "connected",
+      "description": "To leaf-01 Eth49",
+      "bandwidth": 10000000000,
+      "mtu": 9214,
+      "physicalAddress": "aa:bb:cc:dd:ee:01",
+      "burnedInAddress": "aa:bb:cc:dd:ee:01"
+    },
+    "Ethernet2": {
+      "lineProtocolStatus": "down",
+      "interfaceStatus": "disabled",
+      "description": "Unused",
+      "bandwidth": 1000000000,
+      "mtu": 1500,
+      "physicalAddress": "AA:BB:CC:DD:EE:02",
+      "burnedInAddress": "aa:bb:cc:dd:ee:02"
+    }
+  },
+  "ipV4Neighbors": [
+    {
+      "address": "10.0.0.2",
+      "hwAddress": "aa:bb:cc:dd:ee:10",
+      "interface": "Ethernet1",
+      "age": 300.5
+    },
+    {
+      "address": "10.0.0.3",
+      "hwAddress": "AA:BB:CC:DD:EE:11",
+      "interface": "Ethernet2",
+      "age": -1
+    }
+  ]
+}

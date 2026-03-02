@@ -1,0 +1,47 @@
+# docker-compose.yml — Network MCP Server
+#
+# Usage:
+#   docker compose up                          # Start MCP server only
+#   docker compose --profile monitoring up     # Start with Prometheus + Grafana
+#
+# The server runs in streamable-http mode on port 8000.
+# Mount devices.yaml and .env into ./config/ for device inventory.
+
+services:
+  network-mcp:
+    build: .
+    ports:
+      - "8000:8000"
+    command: ["--transport", "streamable-http"]
+    environment:
+      - EOS_DEMO_MODE=false
+      - EOS_READ_ONLY=true
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./config:/app/config:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/health').raise_for_status()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./deploy/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    profiles: ["monitoring"]
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./dashboards:/var/lib/grafana/dashboards:ro
+      - ./deploy/grafana-datasource.yml:/etc/grafana/provisioning/datasources/default.yml:ro
+      - ./deploy/grafana-dashboard.yml:/etc/grafana/provisioning/dashboards/default.yml:ro
+    profiles: ["monitoring"]

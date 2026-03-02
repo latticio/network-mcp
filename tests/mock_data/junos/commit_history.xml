@@ -1,0 +1,23 @@
+<commit-information>
+  <commit-history>
+    <sequence-number>0</sequence-number>
+    <user>admin</user>
+    <client>cli</client>
+    <date-time>2025-01-15 10:00:00 UTC</date-time>
+    <log>Updated BGP peer configuration</log>
+  </commit-history>
+  <commit-history>
+    <sequence-number>1</sequence-number>
+    <user>netops</user>
+    <client>netconf</client>
+    <date-time>2025-01-14 16:30:00 UTC</date-time>
+    <log>Added CUSTOMER-A VRF</log>
+  </commit-history>
+  <commit-history>
+    <sequence-number>2</sequence-number>
+    <user>admin</user>
+    <client>cli</client>
+    <date-time>2025-01-14 09:15:00 UTC</date-time>
+    <log></log>
+  </commit-history>
+</commit-information>

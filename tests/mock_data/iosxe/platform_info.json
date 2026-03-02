@@ -1,0 +1,37 @@
+{
+  "Cisco-IOS-XE-platform-oper:components": {
+    "component": [
+      {
+        "cname": "Chassis",
+        "type": "chassis",
+        "state": {
+          "description": "Cisco CSR1000V Chassis",
+          "part-no": "CSR1000V",
+          "serial-no": "9ZL30UN51R9"
+        }
+      },
+      {
+        "cname": "module0",
+        "type": "module",
+        "state": {
+          "description": "Cisco CSR1000V Route Processor",
+          "part-no": "CSR1000V-RP",
+          "serial-no": "JAB1303001C"
+        }
+      },
+      {
+        "cname": "Power Supply Module 0",
+        "type": "power-supply",
+        "state": {
+          "description": "Cisco CSR1000V AC Power Supply",
+          "part-no": "CSR1000V-PWR",
+          "serial-no": ""
+        }
+      }
+    ]
+  },
+  "pid": "CSR1000V",
+  "sn": "9ZL30UN51R9",
+  "boot_variable": "bootflash:csr1000v-universalk9.17.03.06.SPA.bin",
+  "license_status": "Smart License - Registration: REGISTERED"
+}

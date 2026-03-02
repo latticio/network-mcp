@@ -1,0 +1,81 @@
+{
+  "ins_api": {
+    "type": "cli_show",
+    "version": "1",
+    "sid": "1",
+    "outputs": {
+      "output": {
+        "input": "show ip bgp summary",
+        "msg": "Success",
+        "code": "200",
+        "body": {
+          "TABLE_vrf": {
+            "ROW_vrf": {
+              "vrf-name-out": "default",
+              "router-id": "10.255.0.1",
+              "local-as": 65001,
+              "TABLE_af": {
+                "ROW_af": {
+                  "af-id": 1,
+                  "TABLE_saf": {
+                    "ROW_saf": {
+                      "af-name": "IPv4 Unicast",
+                      "tableversion": 42,
+                      "configuredpeers": 2,
+                      "capablepeers": 2,
+                      "totalnetworks": 15,
+                      "totalpaths": 30,
+                      "memoryused": 4320,
+                      "numberattrs": 8,
+                      "bytesattrs": 1280,
+                      "numberpaths": 2,
+                      "bytespaths": 48,
+                      "numbercommunities": 0,
+                      "bytescommunities": 0,
+                      "numberclusterlist": 0,
+                      "bytesclusterlist": 0,
+                      "TABLE_neighbor": {
+                        "ROW_neighbor": [
+                          {
+                            "neighborid": "10.0.0.2",
+                            "neighborversion": 4,
+                            "msgrecvd": 125000,
+                            "msgsent": 124500,
+                            "neighbortableversion": 42,
+                            "inq": 0,
+                            "outq": 0,
+                            "neighboras": 65002,
+                            "time": "P125DT3H45M",
+                            "state": "Established",
+                            "prefixreceived": 12,
+                            "resettime": "P125DT3H45M",
+                            "resetreason": "No error"
+                          },
+                          {
+                            "neighborid": "10.0.0.3",
+                            "neighborversion": 4,
+                            "msgrecvd": 98000,
+                            "msgsent": 97500,
+                            "neighbortableversion": 42,
+                            "inq": 0,
+                            "outq": 0,
+                            "neighboras": 65003,
+                            "time": "P90DT12H30M",
+                            "state": "Established",
+                            "prefixreceived": 8,
+                            "resettime": "P90DT12H30M",
+                            "resetreason": "No error"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

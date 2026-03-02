@@ -1,0 +1,63 @@
+# systemd service for network-mcp (Streamable HTTP transport)
+#
+# Install:
+#   1. Copy to /etc/systemd/system/network-mcp.service
+#   2. Create environment file: /etc/network-mcp/env
+#   3. Create service user: useradd --system --shell /sbin/nologin mcp
+#   4. Install server: pip install network-mcp (or use venv)
+#   5. Enable and start:
+#      systemctl daemon-reload
+#      systemctl enable network-mcp
+#      systemctl start network-mcp
+
+[Unit]
+Description=Network MCP Server (Streamable HTTP)
+Documentation=https://github.com/latticio/network-mcp
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mcp
+Group=mcp
+WorkingDirectory=/opt/network-mcp
+
+# Virtual environment path
+Environment="PATH=/opt/network-mcp/.venv/bin:/usr/local/bin:/usr/bin"
+
+# Load credentials and settings from environment file
+EnvironmentFile=/etc/network-mcp/env
+
+# Start the MCP server in Streamable HTTP mode
+ExecStart=/opt/network-mcp/.venv/bin/network-mcp --transport streamable-http
+
+# Restart on failure
+Restart=always
+RestartSec=5
+StartLimitBurst=5
+StartLimitIntervalSec=60
+
+# Logging (journald)
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=network-mcp
+
+# --- Security Hardening ---
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+RestrictSUIDSGID=true
+MemoryDenyWriteExecute=true
+
+# Allow read access to config files and write access to logs
+ReadWritePaths=/opt/network-mcp/logs
+ReadOnlyPaths=/etc/network-mcp
+
+[Install]
+WantedBy=multi-user.target

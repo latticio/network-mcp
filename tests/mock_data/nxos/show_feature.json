@@ -1,0 +1,49 @@
+{
+  "ins_api": {
+    "outputs": {
+      "output": {
+        "body": {
+          "TABLE_cfcFeatureCtrlTable": {
+            "ROW_cfcFeatureCtrlTable": [
+              {
+                "cfcFeatureCtrlName2": "bgp",
+                "cfcFeatureCtrlOpStatus2": "enabled",
+                "cfcFeatureCtrlOpStatusInstance": 1
+              },
+              {
+                "cfcFeatureCtrlName2": "vpc",
+                "cfcFeatureCtrlOpStatus2": "enabled",
+                "cfcFeatureCtrlOpStatusInstance": 1
+              },
+              {
+                "cfcFeatureCtrlName2": "lacp",
+                "cfcFeatureCtrlOpStatus2": "enabled",
+                "cfcFeatureCtrlOpStatusInstance": 1
+              },
+              {
+                "cfcFeatureCtrlName2": "ospf",
+                "cfcFeatureCtrlOpStatus2": "disabled",
+                "cfcFeatureCtrlOpStatusInstance": 1
+              },
+              {
+                "cfcFeatureCtrlName2": "pim",
+                "cfcFeatureCtrlOpStatus2": "disabled",
+                "cfcFeatureCtrlOpStatusInstance": 1
+              },
+              {
+                "cfcFeatureCtrlName2": "nxapi",
+                "cfcFeatureCtrlOpStatus2": "enabled",
+                "cfcFeatureCtrlOpStatusInstance": 1
+              },
+              {
+                "cfcFeatureCtrlName2": "scp-server",
+                "cfcFeatureCtrlOpStatus2": "disabled",
+                "cfcFeatureCtrlOpStatusInstance": 1
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

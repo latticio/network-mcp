@@ -1,0 +1,23 @@
+Network MCP Server has been deployed.
+
+1. Get the application URL:
+{{- if .Values.ingress.enabled }}
+  {{- range .Values.ingress.hosts }}
+  https://{{ .host }}
+  {{- end }}
+{{- else }}
+  kubectl port-forward svc/{{ .Release.Name }} 8000:{{ .Values.service.port }}
+  Then visit: http://localhost:8000/health
+{{- end }}
+
+2. Check server health:
+  kubectl exec -it deploy/{{ .Release.Name }} -- python -c \
+    "import httpx; print(httpx.get('http://localhost:8000/health').json())"
+
+3. View logs:
+  kubectl logs -f deploy/{{ .Release.Name }}
+
+4. Configuration:
+  - Read-only mode: {{ .Values.config.readOnly }}
+  - Demo mode: {{ .Values.config.demoMode }}
+  - Log level: {{ .Values.config.logLevel }}

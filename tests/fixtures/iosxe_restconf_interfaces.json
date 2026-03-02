@@ -1,0 +1,56 @@
+{
+  "Cisco-IOS-XE-native:native": {
+    "hostname": "iosxe-rtr-01",
+    "version": "17.09.04a",
+    "license": {
+      "udi": {
+        "pid": "C8300-2N2S-4T2X",
+        "sn": "FDO24360AP3"
+      }
+    }
+  },
+  "ietf-interfaces:interfaces": {
+    "interface": [
+      {
+        "name": "GigabitEthernet1",
+        "oper-status": "up",
+        "enabled": true,
+        "description": "WAN uplink",
+        "speed": 1000000000,
+        "mtu": 1500,
+        "phys-address": "0050.56a0.0001"
+      },
+      {
+        "name": "GigabitEthernet2",
+        "oper-status": "down",
+        "enabled": false,
+        "description": "",
+        "speed": 100000000,
+        "mtu": 9000,
+        "phys-address": "0050.56a0.0002"
+      }
+    ]
+  },
+  "Cisco-IOS-XE-arp-oper:arp-data": {
+    "arp-vrf": [
+      {
+        "vrf": "default",
+        "arp-entry": [
+          {
+            "address": "192.168.1.1",
+            "hardware": "0050.56a0.0010",
+            "interface": "GigabitEthernet1",
+            "time": "120"
+          },
+          {
+            "address": "192.168.1.2",
+            "hardware": "AA-BB-CC-DD-EE-FF",
+            "interface": "GigabitEthernet1",
+            "time": "60"
+          }
+        ]
+      }
+    ]
+  },
+  "show_version_ssh": "Cisco IOS XE Software, Version 17.09.04a\nCisco IOS Software [Cupertino], ASR1001-X Software (X86_64_LINUX_IOSD-UNIVERSALK9-M), Version 17.09.04a, RELEASE SOFTWARE (fc2)\nTechnical Support: http://www.cisco.com/techsupport\nCopyright (c) 1986-2024 by Cisco Systems, Inc.\n\niosce-rtr-01 uptime is 1 year, 2 weeks, 3 days, 4 hours, 5 minutes\n\ncisco C8300-2N2S-4T2X (X86_64) processor\nProcessor board ID FDO24360AP3\n"
+}

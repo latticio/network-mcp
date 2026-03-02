@@ -1,0 +1,42 @@
+{
+  "ins_api": {
+    "outputs": {
+      "output": {
+        "body": {
+          "fex_id": 100,
+          "fex_descr": "FEX100 Fabric Extender",
+          "fex_state": "Online",
+          "fex_model": "N2K-C2248TP-1GE",
+          "fex_serial": "FOC1234ABCD",
+          "fex_version": "7.0(3)I7(10)",
+          "TABLE_fex_uplink": {
+            "ROW_fex_uplink": [
+              {
+                "uplink_if": "Ethernet1/1",
+                "uplink_status": "up",
+                "uplink_speed": "10G"
+              },
+              {
+                "uplink_if": "Ethernet1/2",
+                "uplink_status": "up",
+                "uplink_speed": "10G"
+              }
+            ]
+          },
+          "TABLE_fex_pinning": {
+            "ROW_fex_pinning": [
+              {
+                "host_if": "Ethernet100/1/1",
+                "fabric_if": "Ethernet1/1"
+              },
+              {
+                "host_if": "Ethernet100/1/2",
+                "fabric_if": "Ethernet1/2"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

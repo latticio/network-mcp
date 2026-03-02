@@ -1,0 +1,16 @@
+[edit protocols bgp group EBGP]
+-    neighbor 10.0.0.5 {
+-        peer-as 65005;
+-    }
++    neighbor 10.0.0.6 {
++        peer-as 65006;
++        description "New upstream peer";
++    }
+[edit firewall family inet filter PROTECT-RE]
++    term allow-ntp {
++        from {
++            protocol udp;
++            destination-port ntp;
++        }
++        then accept;
++    }

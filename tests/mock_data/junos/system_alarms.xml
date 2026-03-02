@@ -1,0 +1,17 @@
+<alarm-information>
+  <alarm-summary>
+    <active-alarm-count>2</active-alarm-count>
+  </alarm-summary>
+  <alarm-detail>
+    <alarm-class>Major</alarm-class>
+    <alarm-time>2025-01-15 10:23:45 UTC</alarm-time>
+    <alarm-description>Loss of redundancy in Power Supply 1</alarm-description>
+    <alarm-short-description>PSU failure</alarm-short-description>
+  </alarm-detail>
+  <alarm-detail>
+    <alarm-class>Minor</alarm-class>
+    <alarm-time>2025-01-15 08:12:30 UTC</alarm-time>
+    <alarm-description>Rescue configuration is not set</alarm-description>
+    <alarm-short-description>Rescue config missing</alarm-short-description>
+  </alarm-detail>
+</alarm-information>

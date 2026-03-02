@@ -1,0 +1,68 @@
+{
+  "Cisco-IOS-XE-bgp-oper:bgp-state-data": {
+    "address-families": {
+      "address-family": [
+        {
+          "afi-safi": "ipv4-unicast",
+          "vrf-name": "default",
+          "router-id": "10.0.0.1",
+          "local-as": 65001,
+          "total-paths": 250,
+          "total-prefixes": 120
+        },
+        {
+          "afi-safi": "ipv4-unicast",
+          "vrf-name": "MGMT",
+          "router-id": "10.0.0.1",
+          "local-as": 65001,
+          "total-paths": 10,
+          "total-prefixes": 5
+        }
+      ]
+    },
+    "neighbors": {
+      "neighbor": [
+        {
+          "afi-safi": "ipv4-unicast",
+          "vrf-name": "default",
+          "neighbor-id": "10.0.0.2",
+          "connection": {
+            "state": "established",
+            "total-established": 1,
+            "total-dropped": 0
+          },
+          "prefix-activity": {
+            "received": {
+              "total-prefixes": 85,
+              "bestpaths": 85
+            },
+            "sent": {
+              "total-prefixes": 120
+            }
+          },
+          "up-time": 1296000
+        },
+        {
+          "afi-safi": "ipv4-unicast",
+          "vrf-name": "default",
+          "neighbor-id": "10.0.0.3",
+          "connection": {
+            "state": "established",
+            "total-established": 1,
+            "total-dropped": 0
+          },
+          "prefix-activity": {
+            "received": {
+              "total-prefixes": 65,
+              "bestpaths": 65
+            },
+            "sent": {
+              "total-prefixes": 120
+            }
+          },
+          "up-time": 864000
+        }
+      ]
+    }
+  }
+}

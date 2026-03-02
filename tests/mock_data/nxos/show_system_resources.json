@@ -1,0 +1,17 @@
+{
+  "ins_api": {
+    "outputs": {
+      "output": {
+        "body": {
+          "load_avg_1min": "0.25",
+          "load_avg_5min": "0.18",
+          "load_avg_15min": "0.12",
+          "memory_usage_total": 16384000,
+          "memory_usage_used": 8192000,
+          "memory_usage_free": 8192000,
+          "processes_total": 512
+        }
+      }
+    }
+  }
+}

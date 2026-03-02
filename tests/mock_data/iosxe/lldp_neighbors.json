@@ -1,0 +1,27 @@
+{
+  "Cisco-IOS-XE-lldp-oper:lldp-entries": {
+    "lldp-entry": [
+      {
+        "device-id": "spine-01.lab.local",
+        "local-interface": "GigabitEthernet2",
+        "connecting-interface": "Ethernet1/1",
+        "ttl": 120,
+        "system-desc": "Arista Networks EOS version 4.32.1F running on an Arista DCS-7050TX3-48C8",
+        "capabilities": {
+          "router": true,
+          "bridge": true
+        }
+      },
+      {
+        "device-id": "switch-02.lab.local",
+        "local-interface": "GigabitEthernet1",
+        "connecting-interface": "GigabitEthernet0/1",
+        "ttl": 120,
+        "system-desc": "Cisco IOS Software, C2960 Software (C2960-LANBASEK9-M), Version 15.2(7)E5",
+        "capabilities": {
+          "bridge": true
+        }
+      }
+    ]
+  }
+}

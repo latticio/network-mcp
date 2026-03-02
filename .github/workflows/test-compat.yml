@@ -1,0 +1,34 @@
+name: Dependency Compatibility
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-compat:
+    name: All Extras Compatibility
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install with all extras
+        run: uv sync --all-extras
+      - name: Verify import
+        run: uv run python -c "import network_mcp; print('All extras OK')"
+      - name: Verify driver registry
+        run: |
+          uv run python -c "
+          from network_mcp.drivers import DRIVER_REGISTRY
+          assert 'eos' in DRIVER_REGISTRY, 'EOS driver missing from registry'
+          print(f'DRIVER_REGISTRY: {list(DRIVER_REGISTRY.keys())}')
+          print('Driver registry OK')
+          "
+      - name: Run tests
+        run: uv run pytest tests/ -v --timeout=120

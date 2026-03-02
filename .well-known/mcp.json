@@ -1,0 +1,13 @@
+{
+    "name": "network-mcp",
+    "version": "6.0.0",
+    "description": "Multi-vendor Network MCP Platform — AI-powered network automation via eAPI, RESTCONF, NX-API, and gNMI",
+    "vendor": "community",
+    "repository": "https://github.com/latticio/network-mcp",
+    "license": "Apache-2.0",
+    "capabilities": {
+        "tools": true,
+        "resources": true,
+        "prompts": true
+    }
+}

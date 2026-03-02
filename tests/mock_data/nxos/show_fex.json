@@ -1,0 +1,36 @@
+{
+  "ins_api": {
+    "version": "1",
+    "type": "cli_show",
+    "sid": "1",
+    "outputs": {
+      "output": {
+        "code": "200",
+        "msg": "Success",
+        "input": "show fex",
+        "body": {
+          "TABLE_fex": {
+            "ROW_fex": [
+              {
+                "fex_id": "100",
+                "fex_descr": "FEX100 Fabric Extender",
+                "fex_state": "Online",
+                "fex_model": "N2K-C2248TP-1GE",
+                "fex_serial": "FOC1234ABCD",
+                "fex_fabric_if": "Po100"
+              },
+              {
+                "fex_id": "101",
+                "fex_descr": "FEX101 Fabric Extender",
+                "fex_state": "Online",
+                "fex_model": "N2K-C2248TP-1GE",
+                "fex_serial": "FOC1234EFGH",
+                "fex_fabric_if": "Po101"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

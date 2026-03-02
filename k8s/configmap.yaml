@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: network-mcp-config
+  labels:
+    app: network-mcp
+data:
+  NET_READ_ONLY: "true"
+  NET_DEMO_MODE: "false"
+  LOG_LEVEL: "INFO"
+  NET_TRANSPORT: "https"
+  NET_CACHE_ENABLED: "true"
+  NET_CIRCUIT_BREAKER: "false"
+  NET_METRICS: "false"
+  NET_PROGRESSIVE_DISCOVERY: "false"
+  RATE_LIMIT_SHOW: "5.0"
+  RATE_LIMIT_CONFIG: "1.0"
+  TIMEOUT_CONNECT: "10.0"
+  TIMEOUT_SHOW: "30.0"
+  TIMEOUT_CONFIG: "60.0"
+  NET_INVENTORY_FILE: "/app/config/devices.yaml"
+  NET_DISTRIBUTED_BACKEND: "local"
+  NET_REDIS_URL: ""
+  NET_OTEL_ENABLED: "false"
+  NET_OTEL_ENDPOINT: ""
+  NET_CHANGE_MGMT_ENABLED: "false"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: network-mcp-devices
+  labels:
+    app: network-mcp
+data:
+  # Replace with your actual devices.yaml content
+  devices.yaml: |
+    devices:
+      - name: spine-01
+        host: 10.0.0.1
+        platform: eos
+        role: spine
+        groups: [fabric]
+      - name: leaf-01
+        host: 10.0.0.11
+        platform: eos
+        role: leaf
+        groups: [fabric]

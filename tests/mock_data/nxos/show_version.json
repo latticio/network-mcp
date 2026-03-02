@@ -1,0 +1,47 @@
+{
+  "ins_api": {
+    "type": "cli_show",
+    "version": "1",
+    "sid": "1",
+    "outputs": {
+      "output": {
+        "input": "show version",
+        "msg": "Success",
+        "code": "200",
+        "body": {
+          "header_str": "Cisco Nexus Operating System (NX-OS) Software\nTAC support: http://www.cisco.com/tac\nDocuments: http://www.cisco.com/en/US/products/ps9372/tsd_products_support_series_home.html\nCopyright (c) 2002-2024, Cisco Systems, Inc. All rights reserved.\nThe copyrights to certain works contained herein are owned by\nother third parties and are used and distributed under license.",
+          "bios_ver_str": "07.69",
+          "kickstart_ver_str": "10.3(2)",
+          "nxos_ver_str": "10.3(2)",
+          "sys_ver_str": "10.3(2)",
+          "bios_cmpl_time": "04/06/2023",
+          "kick_file_name": "bootflash:///nxos64-cs.10.3.2.F.bin",
+          "kick_cmpl_time": "8/18/2023 12:00:00",
+          "kick_tmstmp": "08/18/2023 20:47:33",
+          "chassis_id": "Nexus9000 C9396PX",
+          "cpu_name": "Intel(R) Xeon(R) CPU",
+          "memory": 16400720,
+          "mem_type": "kB",
+          "proc_board_id": "SAL1911C4LR",
+          "host_name": "n9k-spine-01",
+          "bootflash_size": 53298520,
+          "kern_uptm_days": 125,
+          "kern_uptm_hrs": 3,
+          "kern_uptm_mins": 45,
+          "kern_uptm_secs": 12,
+          "rr_usecs": 937862,
+          "rr_ctime": "Mon Jul  1 08:15:33 2024",
+          "rr_reason": "Reset Requested by CLI command reload",
+          "rr_sys_ver": "10.3(2)",
+          "rr_service": "",
+          "manufacturer": "Cisco Systems, Inc.",
+          "TABLE_package_list": {
+            "ROW_package_list": {
+              "package_id": ""
+            }
+          }
+        }
+      }
+    }
+  }
+}
