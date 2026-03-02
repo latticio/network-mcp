@@ -8,8 +8,8 @@ SSH fallback uses scrapli for persistent, secure sessions (replacing
 the previous subprocess-based SSH that had security issues including
 disabled host key verification and no session reuse).
 
-Requires the ``cisco`` optional extra: ``pip install network-mcp[cisco]``
-SSH fallback requires: ``pip install network-mcp[ssh]``
+Requires the ``cisco`` optional extra: ``pip install latticio[cisco]``
+SSH fallback requires: ``pip install latticio[ssh]``
 """
 
 from __future__ import annotations
@@ -86,7 +86,7 @@ class IosXeScrapliTransport:
         timeout_ops: float = 30.0,
     ) -> None:
         if not HAS_SCRAPLI:
-            raise ImportError("scrapli not installed. Install with: pip install network-mcp[ssh]")
+            raise ImportError("scrapli not installed. Install with: pip install latticio[ssh]")
         driver_kwargs: dict[str, Any] = {
             "host": host,
             "auth_username": username,
@@ -302,7 +302,7 @@ class IosXeDriver:
                 self._ssh_transport = None
         else:
             logger.warning(
-                "scrapli not installed — SSH fallback unavailable for %s. Install with: pip install network-mcp[ssh]",
+                "scrapli not installed — SSH fallback unavailable for %s. Install with: pip install latticio[ssh]",
                 host,
             )
             self._ssh_transport = None
@@ -573,7 +573,7 @@ class IosXeDriver:
     def _ssh_config(self, commands: list[str]) -> list[str]:
         """Execute config commands via SSH (scrapli)."""
         if self._ssh_transport is None:
-            raise ConnectionError("SSH transport not available. Install scrapli: pip install network-mcp[ssh]")
+            raise ConnectionError("SSH transport not available. Install scrapli: pip install latticio[ssh]")
         try:
             output = self._ssh_transport.send_config(commands)
             return [output]
@@ -590,7 +590,7 @@ class IosXeDriver:
         if not self._ssh_host or not self._ssh_username:
             raise ConnectionError("SSH not configured. Call connect() first.")
         if self._ssh_transport is None:
-            raise ConnectionError("SSH transport not available. Install scrapli: pip install network-mcp[ssh]")
+            raise ConnectionError("SSH transport not available. Install scrapli: pip install latticio[ssh]")
 
         try:
             return self._ssh_transport.send_command(command)

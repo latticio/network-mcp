@@ -568,7 +568,7 @@ Module: `tools/cloudvision.py` (2 tools) — *Requires `EOS_CVP_URL`*
 
 ## Cisco NX-OS Tools (`nxos_*`)
 
-Modules: `tools/cisco/` — *Requires `cisco` extra (`pip install network-mcp[cisco]`)*
+Modules: `tools/cisco/` — *Requires `cisco` extra (`pip install latticio[cisco]`)*
 
 | Tool | Description | Parameters | Type |
 |------|-------------|------------|------|
@@ -583,7 +583,7 @@ Modules: `tools/cisco/` — *Requires `cisco` extra (`pip install network-mcp[ci
 
 ## Cisco IOS-XE Tools (`iosxe_*`)
 
-Modules: `tools/cisco/` — *Requires `cisco` extra (`pip install network-mcp[cisco]`)*
+Modules: `tools/cisco/` — *Requires `cisco` extra (`pip install latticio[cisco]`)*
 
 | Tool | Description | Parameters | Type |
 |------|-------------|------------|------|
@@ -595,7 +595,7 @@ Modules: `tools/cisco/` — *Requires `cisco` extra (`pip install network-mcp[ci
 
 ## Juniper JunOS Tools (`junos_*`)
 
-Modules: `tools/juniper/` — *Requires `juniper` extra (`pip install network-mcp[juniper]`)*
+Modules: `tools/juniper/` — *Requires `juniper` extra (`pip install latticio[juniper]`)*
 
 | Tool | Description | Parameters | Type |
 |------|-------------|------------|------|

@@ -32,7 +32,7 @@ The agent calls NetBox MCP tools to retrieve intended state (device records, ass
 ## Prerequisites
 
 - **NetBox MCP Server** installed and configured ([netboxlabs/netbox-mcp-server](https://github.com/netboxlabs/netbox-mcp-server))
-- **network-mcp** installed (`uvx network-mcp` or `pip install network-mcp`)
+- **network-mcp** installed (`uvx latticio` or `pip install latticio`)
 - A **NetBox instance** (v3.5+) with device, interface, IP address, and cable data populated
 - **Arista EOS devices** accessible via eAPI (or use demo mode for testing)
 - A **NetBox API token** with read-only permissions
@@ -46,9 +46,9 @@ File: `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 ```json
 {
   "mcpServers": {
-    "network-mcp": {
+    "latticio": {
       "command": "uvx",
-      "args": ["network-mcp"],
+      "args": ["latticio"],
       "env": {
         "EOS_USERNAME": "admin",
         "EOS_PASSWORD": "your-eos-password",
@@ -76,7 +76,7 @@ File: `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 
 ```bash
 # Add network-mcp
-claude mcp add network-mcp -- uvx network-mcp
+claude mcp add network-mcp -- uvx latticio
 
 # Add NetBox MCP
 claude mcp add --transport stdio netbox \
@@ -92,9 +92,9 @@ File: `.cursor/mcp.json`
 ```json
 {
   "mcpServers": {
-    "network-mcp": {
+    "latticio": {
       "command": "uvx",
-      "args": ["network-mcp"],
+      "args": ["latticio"],
       "env": {
         "EOS_USERNAME": "admin",
         "EOS_PASSWORD": "your-eos-password",
@@ -125,9 +125,9 @@ File: `.vscode/mcp.json`
 ```json
 {
   "mcpServers": {
-    "network-mcp": {
+    "latticio": {
       "command": "uvx",
-      "args": ["network-mcp"],
+      "args": ["latticio"],
       "env": {
         "EOS_USERNAME": "admin",
         "EOS_PASSWORD": "your-eos-password"
@@ -426,9 +426,9 @@ You can test the integration workflow without live Arista switches by running ne
 ```json
 {
   "mcpServers": {
-    "network-mcp": {
+    "latticio": {
       "command": "uvx",
-      "args": ["network-mcp"],
+      "args": ["latticio"],
       "env": { "EOS_DEMO_MODE": "true" }
     },
     "netbox": {

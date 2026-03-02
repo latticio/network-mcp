@@ -30,7 +30,7 @@ except ImportError:
 
 GNMI_NOT_INSTALLED_ERROR = {
     "status": "error",
-    "error": "pygnmi is not installed. Install with: pip install network-mcp[gnmi]",
+    "error": "pygnmi is not installed. Install with: pip install latticio[gnmi]",
 }
 
 GNMI_NOT_ENABLED_ERROR = {
@@ -409,7 +409,7 @@ class GnmiConnectionPool:
             RuntimeError: If pygnmi is not installed.
         """
         if not GNMI_AVAILABLE:
-            raise RuntimeError("pygnmi is not installed. Install with: pip install network-mcp[gnmi]")
+            raise RuntimeError("pygnmi is not installed. Install with: pip install latticio[gnmi]")
 
         actual_port = port or self._default_port
         key = (host, actual_port)

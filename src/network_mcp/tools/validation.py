@@ -30,7 +30,7 @@ except ImportError:
 
 ANTA_NOT_INSTALLED_ERROR = {
     "status": "error",
-    "error": "ANTA is not installed. Install with: pip install network-mcp[anta]",
+    "error": "ANTA is not installed. Install with: pip install latticio[anta]",
 }
 
 
@@ -138,7 +138,7 @@ async def eos_validate_bgp(host: str) -> dict:
     """Run ANTA BGP validation tests against an Arista EOS device.
 
     Runs BGP health checks including peer state validation for IPv4 unicast.
-    Requires ANTA optional dependency: pip install network-mcp[anta]
+    Requires ANTA optional dependency: pip install latticio[anta]
 
     Args:
         host: Hostname, IP address, or inventory name of the Arista EOS device.
@@ -173,7 +173,7 @@ async def eos_validate_mlag(host: str) -> dict:
     """Run ANTA MLAG validation tests against an Arista EOS device.
 
     Checks MLAG status, interface consistency, and configuration sanity.
-    Requires ANTA optional dependency: pip install network-mcp[anta]
+    Requires ANTA optional dependency: pip install latticio[anta]
 
     Args:
         host: Hostname, IP address, or inventory name of the Arista EOS device.
@@ -209,7 +209,7 @@ async def eos_validate_interfaces(host: str) -> dict:
     """Run ANTA interface validation tests against an Arista EOS device.
 
     Checks interface utilization, error counters, discards, and err-disabled status.
-    Requires ANTA optional dependency: pip install network-mcp[anta]
+    Requires ANTA optional dependency: pip install latticio[anta]
 
     Args:
         host: Hostname, IP address, or inventory name of the Arista EOS device.
@@ -249,7 +249,7 @@ async def eos_validate_system(host: str) -> dict:
 
     Checks NTP sync, CPU/memory/filesystem utilization, coredumps, agent logs,
     and reload cause.
-    Requires ANTA optional dependency: pip install network-mcp[anta]
+    Requires ANTA optional dependency: pip install latticio[anta]
 
     Args:
         host: Hostname, IP address, or inventory name of the Arista EOS device.
@@ -277,7 +277,7 @@ async def eos_run_anta_tests(host: str, catalog_yaml: str) -> dict:
 
     Accepts a YAML-formatted ANTA test catalog string and runs it against
     the specified device. This allows maximum flexibility for custom validation.
-    Requires ANTA optional dependency: pip install network-mcp[anta]
+    Requires ANTA optional dependency: pip install latticio[anta]
 
     Example catalog_yaml:
         anta.tests.system:

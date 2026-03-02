@@ -63,7 +63,7 @@ if settings.auth_enabled:
     if not JWT_AVAILABLE:
         logger.warning(
             "AUTH_ENABLED=true but PyJWT is not installed. "
-            "Auth will be disabled. Install with: pip install network-mcp[auth]"
+            "Auth will be disabled. Install with: pip install latticio[auth]"
         )
     elif not settings.auth_issuer_url:
         logger.warning(
@@ -123,7 +123,7 @@ if settings.mtls_enabled:
     if not CRYPTO_AVAILABLE:
         logger.warning(
             "NET_MTLS_ENABLED=true but cryptography is not installed. "
-            "mTLS will be disabled. Install with: pip install network-mcp[mtls]"
+            "mTLS will be disabled. Install with: pip install latticio[mtls]"
         )
     else:
         _cert_verifier = CertificateVerifier.from_settings(
@@ -162,7 +162,7 @@ if settings.vault_enabled:
         logger.info("Vault credential provider enabled (addr=%s, mount=%s)", settings.vault_addr, settings.vault_mount)
     except ImportError as e:
         raise SystemExit(
-            "VAULT_ENABLED=true but hvac is not installed. Install with: pip install network-mcp[vault]"
+            "VAULT_ENABLED=true but hvac is not installed. Install with: pip install latticio[vault]"
         ) from e
     except RuntimeError as e:
         raise SystemExit(f"Vault authentication failed at startup: {e}") from e
@@ -595,7 +595,7 @@ _gnmi_allowed = (_enabled is None or "gnmi" in _enabled) and not _progressive
 if GNMI_AVAILABLE and _gnmi_allowed:
     _load_module("gnmi", ".tools.gnmi")
 elif not GNMI_AVAILABLE:
-    logger.info("gNMI tools not available (install with: pip install network-mcp[gnmi])")
+    logger.info("gNMI tools not available (install with: pip install latticio[gnmi])")
 elif _progressive:
     logger.info("gNMI tools deferred (progressive discovery enabled — use eos_load_tool_category('gnmi'))")
 elif not _gnmi_allowed:
@@ -663,7 +663,7 @@ try:
     _load_module("cisco.iosxe", "network_mcp.tools.cisco.iosxe")
     _load_module("cisco.nxos", "network_mcp.tools.cisco.nxos")
 except ImportError:
-    logger.info("Cisco tools not loaded (install with: pip install network-mcp[cisco])")
+    logger.info("Cisco tools not loaded (install with: pip install latticio[cisco])")
 
 # Juniper-specific tools — loaded only when scrapli-netconf is installed (juniper extra)
 # Not affected by progressive discovery or module filtering since they are
@@ -673,7 +673,7 @@ try:
 
     _load_module("juniper.junos", "network_mcp.tools.juniper.junos")
 except ImportError:
-    logger.info("Juniper tools not loaded (install with: pip install network-mcp[juniper])")
+    logger.info("Juniper tools not loaded (install with: pip install latticio[juniper])")
 
 # --- Plugin discovery (third-party drivers, compliance packs, tool modules) ---
 

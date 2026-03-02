@@ -63,9 +63,9 @@ Config file: `~/Library/Application Support/Claude/claude_desktop_config.json` (
 ```json
 {
   "mcpServers": {
-    "network-mcp": {
+    "latticio": {
       "command": "uvx",
-      "args": ["network-mcp"],
+      "args": ["latticio"],
       "env": {
         "NET_USERNAME": "admin",
         "NET_PASSWORD": "your-password",
@@ -81,7 +81,7 @@ To use a locally installed version instead of `uvx`:
 ```json
 {
   "mcpServers": {
-    "network-mcp": {
+    "latticio": {
       "command": "/path/to/venv/bin/network-mcp",
       "env": {
         "NET_USERNAME": "admin",
@@ -99,9 +99,9 @@ Config file: `.cursor/mcp.json` in your project root (or global settings)
 ```json
 {
   "mcpServers": {
-    "network-mcp": {
+    "latticio": {
       "command": "uvx",
-      "args": ["network-mcp"],
+      "args": ["latticio"],
       "env": {
         "NET_USERNAME": "admin",
         "NET_PASSWORD": "your-password",
@@ -119,9 +119,9 @@ Config file: `.vscode/mcp.json` in your workspace
 ```json
 {
   "mcpServers": {
-    "network-mcp": {
+    "latticio": {
       "command": "uvx",
-      "args": ["network-mcp"],
+      "args": ["latticio"],
       "env": {
         "NET_USERNAME": "admin",
         "NET_PASSWORD": "your-password"
@@ -134,7 +134,7 @@ Config file: `.vscode/mcp.json` in your workspace
 ### Claude Code
 
 ```bash
-claude mcp add network-mcp -- uvx network-mcp
+claude mcp add network-mcp -- uvx latticio
 ```
 
 Or with environment variables:
@@ -144,7 +144,7 @@ claude mcp add network-mcp \
   -e NET_USERNAME=admin \
   -e NET_PASSWORD=your-password \
   -e NET_INVENTORY_FILE=/path/to/devices.yaml \
-  -- uvx network-mcp
+  -- uvx latticio
 ```
 
 ---
@@ -163,7 +163,7 @@ network-mcp --transport streamable-http
 uv run network-mcp --transport streamable-http
 
 # Using uvx (no install needed)
-uvx network-mcp --transport streamable-http
+uvx latticio --transport streamable-http
 ```
 
 The server listens on `http://0.0.0.0:8000` by default.
@@ -240,7 +240,7 @@ Or if installing from PyPI instead of building from source:
 
 ```dockerfile
 FROM python:3.13-slim
-RUN pip install network-mcp[gnmi,anta,prometheus]
+RUN pip install latticio[gnmi,anta,prometheus]
 ENTRYPOINT ["network-mcp"]
 ```
 
@@ -397,7 +397,7 @@ sudo useradd --system --shell /usr/sbin/nologin network-mcp
 # Install the application
 sudo mkdir -p /opt/network-mcp
 sudo python -m venv /opt/network-mcp/venv
-sudo /opt/network-mcp/venv/bin/pip install network-mcp
+sudo /opt/network-mcp/venv/bin/pip install latticio
 
 # Copy inventory and environment config
 sudo cp devices.yaml /opt/network-mcp/
@@ -817,7 +817,7 @@ Each replica should manage a separate inventory partition, or use the same inven
 The server can expose metrics in Prometheus exposition format. Install the optional dependency:
 
 ```bash
-pip install network-mcp[prometheus]
+pip install latticio[prometheus]
 # or
 uv pip install prometheus-client
 ```

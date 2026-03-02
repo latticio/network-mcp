@@ -33,7 +33,7 @@ The agent calls Grafana MCP tools to retrieve metric values, active alerts, and 
 ## Prerequisites
 
 - **Grafana MCP Server** installed ([grafana/mcp-grafana](https://github.com/grafana/mcp-grafana))
-- **network-mcp** installed (`uvx network-mcp` or `pip install network-mcp`)
+- **network-mcp** installed (`uvx latticio` or `pip install latticio`)
 - A **Grafana instance** (v9.0+) with datasources configured (Prometheus, Loki, etc.)
 - **Arista EOS devices** accessible via eAPI (or use demo mode for testing)
 - A **Grafana service account token** with at least Viewer permissions
@@ -47,9 +47,9 @@ File: `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 ```json
 {
   "mcpServers": {
-    "network-mcp": {
+    "latticio": {
       "command": "uvx",
-      "args": ["network-mcp"],
+      "args": ["latticio"],
       "env": {
         "EOS_USERNAME": "admin",
         "EOS_PASSWORD": "your-eos-password",
@@ -72,7 +72,7 @@ File: `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 
 ```bash
 # Add network-mcp
-claude mcp add network-mcp -- uvx network-mcp
+claude mcp add latticio -- uvx latticio
 
 # Add Grafana MCP
 claude mcp add grafana \
@@ -88,9 +88,9 @@ File: `.cursor/mcp.json`
 ```json
 {
   "mcpServers": {
-    "network-mcp": {
+    "latticio": {
       "command": "uvx",
-      "args": ["network-mcp"],
+      "args": ["latticio"],
       "env": {
         "EOS_USERNAME": "admin",
         "EOS_PASSWORD": "your-eos-password",
@@ -116,9 +116,9 @@ File: `.vscode/mcp.json`
 ```json
 {
   "mcpServers": {
-    "network-mcp": {
+    "latticio": {
       "command": "uvx",
-      "args": ["network-mcp"],
+      "args": ["latticio"],
       "env": {
         "EOS_USERNAME": "admin",
         "EOS_PASSWORD": "your-eos-password"
@@ -412,9 +412,9 @@ You can test the integration workflow without live Arista switches by running ne
 ```json
 {
   "mcpServers": {
-    "network-mcp": {
+    "latticio": {
       "command": "uvx",
-      "args": ["network-mcp"],
+      "args": ["latticio"],
       "env": { "EOS_DEMO_MODE": "true" }
     },
     "grafana": {

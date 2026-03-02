@@ -4,7 +4,7 @@
 #   1. Copy to /etc/systemd/system/network-mcp.service
 #   2. Create environment file: /etc/network-mcp/env
 #   3. Create service user: useradd --system --shell /sbin/nologin mcp
-#   4. Install server: pip install network-mcp (or use venv)
+#   4. Install server: pip install latticio (or use venv)
 #   5. Enable and start:
 #      systemctl daemon-reload
 #      systemctl enable network-mcp

@@ -168,7 +168,7 @@ Client connection issues
 │
 ├── VS Code Copilot
 │   └── Add to .vscode/mcp.json:
-│       { "servers": { "network-mcp": { ... } } }
+│       { "servers": { "latticio": { ... } } }
 │
 └── HTTP Transport
     ├── Start server: uv run network-mcp --transport streamable-http

@@ -22,7 +22,7 @@ except ImportError:
 
 _PROMETHEUS_MISSING = {
     "status": "error",
-    "error": "prometheus-client not installed. Install with: pip install network-mcp[prometheus]",
+    "error": "prometheus-client not installed. Install with: pip install latticio[prometheus]",
 }
 
 

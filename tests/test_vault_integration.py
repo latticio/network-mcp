@@ -88,7 +88,7 @@ class TestVaultCredentialProvider:
     def test_hvac_not_installed_raises_import_error(self):
         """hvac not installed raises ImportError with install instructions."""
         with patch("network_mcp.integrations.vault._import_hvac", return_value=None):
-            with pytest.raises(ImportError, match="hvac not installed.*pip install network-mcp\\[vault\\]"):
+            with pytest.raises(ImportError, match="hvac not installed.*pip install latticio\\[vault\\]"):
                 VaultCredentialProvider(addr="https://vault.example.com", token="s.token123")
 
     def test_get_all_credentials(self):

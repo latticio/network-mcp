@@ -80,7 +80,7 @@ async def test_validate_bgp_anta_not_installed():
         result = await eos_validate_bgp("test-switch")
     assert result["status"] == "error"
     assert "ANTA is not installed" in result["error"]
-    assert "pip install network-mcp[anta]" in result["error"]
+    assert "pip install latticio[anta]" in result["error"]
 
 
 @pytest.mark.asyncio

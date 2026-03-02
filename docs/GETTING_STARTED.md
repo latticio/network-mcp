@@ -8,13 +8,13 @@ Get from zero to network automation in under 5 minutes using **demo mode** — n
 
 ```bash
 # Option A: Run directly with uvx (recommended — no install needed)
-uvx network-mcp
+uvx latticio
 
 # Option B: Install with pip
-pip install network-mcp
+pip install latticio
 
 # Option C: Install with uv
-uv pip install network-mcp
+uv pip install latticio
 ```
 
 **Requirements:** Python 3.11 or later.
@@ -22,13 +22,13 @@ uv pip install network-mcp
 **Optional extras** for vendor-specific drivers:
 
 ```bash
-pip install network-mcp[arista]    # Arista EOS support (pyeapi)
-pip install network-mcp[cisco]     # Cisco IOS-XE and NX-OS support (httpx)
-pip install network-mcp[juniper]   # Juniper JunOS support (scrapli-netconf)
-pip install network-mcp[gnmi]      # gNMI telemetry support (pygnmi)
-pip install network-mcp[anta]      # ANTA network validation framework
-pip install network-mcp[auth]      # OAuth 2.1 for HTTP transport (PyJWT)
-pip install network-mcp[all]       # All vendor drivers + gNMI + ANTA
+pip install latticio[arista]    # Arista EOS support (pyeapi)
+pip install latticio[cisco]     # Cisco IOS-XE and NX-OS support (httpx)
+pip install latticio[juniper]   # Juniper JunOS support (scrapli-netconf)
+pip install latticio[gnmi]      # gNMI telemetry support (pygnmi)
+pip install latticio[anta]      # ANTA network validation framework
+pip install latticio[auth]      # OAuth 2.1 for HTTP transport (PyJWT)
+pip install latticio[all]       # All vendor drivers + gNMI + ANTA
 ```
 
 ### Step 2: Start in Demo Mode
@@ -72,9 +72,9 @@ Add to your config file:
 ```json
 {
   "mcpServers": {
-    "network-mcp": {
+    "latticio": {
       "command": "uvx",
-      "args": ["network-mcp"],
+      "args": ["latticio"],
       "env": {
         "NET_DEMO_MODE": "true"
       }
@@ -90,9 +90,9 @@ Create `.mcp.json` in your project root:
 ```json
 {
   "mcpServers": {
-    "network-mcp": {
+    "latticio": {
       "command": "uvx",
-      "args": ["network-mcp"],
+      "args": ["latticio"],
       "env": {
         "NET_DEMO_MODE": "true"
       }
@@ -104,7 +104,7 @@ Create `.mcp.json` in your project root:
 Or add it via the CLI:
 
 ```bash
-claude mcp add network -- env NET_DEMO_MODE=true uvx network-mcp
+claude mcp add latticio -- env NET_DEMO_MODE=true uvx latticio
 ```
 
 #### Cursor
@@ -114,9 +114,9 @@ Add to `.cursor/mcp.json` in your project:
 ```json
 {
   "mcpServers": {
-    "network-mcp": {
+    "latticio": {
       "command": "uvx",
-      "args": ["network-mcp"],
+      "args": ["latticio"],
       "env": {
         "NET_DEMO_MODE": "true"
       }
@@ -132,9 +132,9 @@ Add to `.vscode/mcp.json` in your project:
 ```json
 {
   "mcpServers": {
-    "network-mcp": {
+    "latticio": {
       "command": "uvx",
-      "args": ["network-mcp"],
+      "args": ["latticio"],
       "env": {
         "NET_DEMO_MODE": "true"
       }
@@ -298,9 +298,9 @@ Remove `NET_DEMO_MODE` from your client configuration (or set it to `false`) to 
 ```json
 {
   "mcpServers": {
-    "network-mcp": {
+    "latticio": {
       "command": "uvx",
-      "args": ["network-mcp"],
+      "args": ["latticio"],
       "env": {
         "NET_USERNAME": "admin",
         "NET_PASSWORD": "your_password",
@@ -358,7 +358,7 @@ Use a virtual environment instead of installing globally:
 
 ```bash
 uv venv && source .venv/bin/activate
-uv pip install network-mcp
+uv pip install latticio
 ```
 
 Or use the `--user` flag: `pip install --user network-mcp`
@@ -454,7 +454,7 @@ commit
 1. Verify your config JSON is valid (no trailing commas, correct syntax)
 2. Quit Claude Desktop completely (not just close the window) and reopen it
 3. Check the Claude Desktop logs for MCP connection errors
-4. Ensure `uvx` is in your system PATH — try running `uvx network-mcp` in a terminal first
+4. Ensure `uvx` is in your system PATH — try running `uvx latticio` in a terminal first
 
 ---
 

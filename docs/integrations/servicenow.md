@@ -36,7 +36,7 @@ The agent calls ServiceNow MCP tools to search incidents, create tickets, and ad
   - [servicenow-mcp](https://github.com/michaelbuckner/servicenow-mcp) by Michael Buckner (pip-installable)
   - [servicenow-mcp](https://github.com/echelon-ai-labs/servicenow-mcp) by Echelon AI Labs
   - ServiceNow's native MCP support (Zurich Patch 4+)
-- **network-mcp** installed (`uvx network-mcp` or `pip install network-mcp`)
+- **network-mcp** installed (`uvx latticio` or `pip install latticio`)
 - A **ServiceNow instance** with incident and change management modules
 - **Arista EOS devices** accessible via eAPI (or use demo mode for testing)
 - **ServiceNow credentials** (basic auth, OAuth, or API key) with permissions to read/write incidents and change requests
@@ -52,9 +52,9 @@ File: `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 ```json
 {
   "mcpServers": {
-    "network-mcp": {
+    "latticio": {
       "command": "uvx",
-      "args": ["network-mcp"],
+      "args": ["latticio"],
       "env": {
         "EOS_USERNAME": "admin",
         "EOS_PASSWORD": "your-eos-password",
@@ -78,7 +78,7 @@ File: `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 
 ```bash
 # Add network-mcp
-claude mcp add network-mcp -- uvx network-mcp
+claude mcp add network-mcp -- uvx latticio
 
 # Add ServiceNow MCP
 claude mcp add servicenow -- \
@@ -95,9 +95,9 @@ File: `.cursor/mcp.json`
 ```json
 {
   "mcpServers": {
-    "network-mcp": {
+    "latticio": {
       "command": "uvx",
-      "args": ["network-mcp"],
+      "args": ["latticio"],
       "env": {
         "EOS_USERNAME": "admin",
         "EOS_PASSWORD": "your-eos-password",
@@ -124,9 +124,9 @@ File: `.vscode/mcp.json`
 ```json
 {
   "mcpServers": {
-    "network-mcp": {
+    "latticio": {
       "command": "uvx",
-      "args": ["network-mcp"],
+      "args": ["latticio"],
       "env": {
         "EOS_USERNAME": "admin",
         "EOS_PASSWORD": "your-eos-password"
@@ -499,9 +499,9 @@ Test the integration workflow without live devices or a production ServiceNow in
 ```json
 {
   "mcpServers": {
-    "network-mcp": {
+    "latticio": {
       "command": "uvx",
-      "args": ["network-mcp"],
+      "args": ["latticio"],
       "env": { "EOS_DEMO_MODE": "true" }
     },
     "servicenow": {

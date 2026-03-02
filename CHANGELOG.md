@@ -172,7 +172,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Juniper JunOS driver** (`JunosDriver`) with NETCONF transport via scrapli-netconf
 - **Multi-vendor workflow tools**: `net_diagnose_bgp_session`, `net_troubleshoot_interface`, `net_validate_fabric_health`, `net_export_report`
-- **`juniper` optional extra** (`pip install network-mcp[juniper]`)
+- **`juniper` optional extra** (`pip install latticio[juniper]`)
 - 4 production drivers: EOS, IOS-XE, NX-OS, JunOS
 
 ## [2.4.0] - 2026-02-26
@@ -183,7 +183,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Cisco-specific tools**: `nxos_get_vpc_status`, `nxos_get_fex_status` for NX-OS platform features
 - **"cisco" tool category** in progressive discovery for Cisco-specific tools
 - **Cross-vendor normalization tests** -- parameterized test suite verifying `net_*` common tools across EOS, IOS-XE, and NX-OS
-- **`cisco` optional extra** (`pip install network-mcp[cisco]`) -- installs httpx for RESTCONF/NX-API transports
+- **`cisco` optional extra** (`pip install latticio[cisco]`) -- installs httpx for RESTCONF/NX-API transports
 - **Mock data** for IOS-XE and NX-OS testing (mock drivers, show vpc, show fex responses)
 
 ### Changed

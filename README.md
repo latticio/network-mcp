@@ -1,6 +1,6 @@
 # network-mcp
 
-[![PyPI version](https://img.shields.io/pypi/v/network-mcp.svg)](https://pypi.org/project/network-mcp/)
+[![PyPI version](https://img.shields.io/pypi/v/latticio.svg)](https://pypi.org/project/latticio/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-8%2C422%20passing-brightgreen)](tests/)
@@ -23,7 +23,7 @@ network-mcp lets any network engineer manage multi-vendor infrastructure through
 - **Multi-vendor by design** — one tool works across Arista, Cisco, and Juniper. Add a device, set the `platform` field, done.
 - **Enterprise-grade** — RBAC, audit logging, OWASP MCP Top 10 compliance, mTLS, circuit breakers, OpenTelemetry
 - **Operational workflows** — not just "run show commands." Full troubleshooting, validation, change management, and drift detection
-- **5-minute setup** — `pip install network-mcp` and connect. Or try demo mode with zero configuration.
+- **5-minute setup** — `pip install latticio` and connect. Or try demo mode with zero configuration.
 
 ## How It Works
 
@@ -51,7 +51,7 @@ The [Model Context Protocol](https://modelcontextprotocol.io) (MCP) is an open s
 ### Try it now (no devices needed)
 
 ```bash
-NET_DEMO_MODE=true uvx network-mcp
+NET_DEMO_MODE=true uvx latticio
 ```
 
 Demo mode returns realistic mock data for all tools — perfect for evaluation and learning.
@@ -60,10 +60,10 @@ Demo mode returns realistic mock data for all tools — perfect for evaluation a
 
 ```bash
 # Option 1: uvx (zero-install)
-uvx network-mcp
+uvx latticio
 
 # Option 2: pip
-pip install network-mcp
+pip install latticio
 
 # Option 3: Docker
 docker run -e NET_USERNAME=admin -e NET_PASSWORD=secret latticio/network-mcp
@@ -77,11 +77,11 @@ uv sync --extra dev
 ### Vendor extras
 
 ```bash
-pip install network-mcp[cisco]    # Cisco IOS-XE and NX-OS (httpx)
-pip install network-mcp[juniper]  # Juniper JunOS (scrapli-netconf)
-pip install network-mcp[gnmi]     # gNMI telemetry (pygnmi)
-pip install network-mcp[anta]     # ANTA validation framework
-pip install network-mcp[all]      # Everything
+pip install latticio[cisco]    # Cisco IOS-XE and NX-OS (httpx)
+pip install latticio[juniper]  # Juniper JunOS (scrapli-netconf)
+pip install latticio[gnmi]     # gNMI telemetry (pygnmi)
+pip install latticio[anta]     # ANTA validation framework
+pip install latticio[all]      # Everything
 ```
 
 ### Connect to Claude Desktop
@@ -91,9 +91,9 @@ File: `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 ```json
 {
   "mcpServers": {
-    "network-mcp": {
+    "latticio": {
       "command": "uvx",
-      "args": ["network-mcp"],
+      "args": ["latticio"],
       "env": {
         "NET_DEMO_MODE": "true"
       }
@@ -112,7 +112,7 @@ Replace `NET_DEMO_MODE` with `NET_USERNAME`, `NET_PASSWORD`, and `NET_INVENTORY_
 <summary>Claude Code</summary>
 
 ```bash
-claude mcp add network-mcp -- uvx network-mcp
+claude mcp add latticio -- uvx latticio
 ```
 </details>
 
@@ -124,9 +124,9 @@ File: `.cursor/mcp.json`
 ```json
 {
   "mcpServers": {
-    "network-mcp": {
+    "latticio": {
       "command": "uvx",
-      "args": ["network-mcp"],
+      "args": ["latticio"],
       "env": {
         "NET_USERNAME": "admin",
         "NET_PASSWORD": "your-password"
@@ -145,9 +145,9 @@ File: `.vscode/mcp.json`
 ```json
 {
   "mcpServers": {
-    "network-mcp": {
+    "latticio": {
       "command": "uvx",
-      "args": ["network-mcp"],
+      "args": ["latticio"],
       "env": {
         "NET_USERNAME": "admin",
         "NET_PASSWORD": "your-password"
@@ -163,11 +163,11 @@ File: `.vscode/mcp.json`
 
 ```bash
 # Start the server over HTTP
-network-mcp --transport streamable-http
+latticio --transport streamable-http
 
 # With OAuth 2.1 authentication
 AUTH_ENABLED=true AUTH_ISSUER_URL=https://auth.example.com \
-  network-mcp --transport streamable-http
+  latticio --transport streamable-http
 ```
 </details>
 

@@ -94,7 +94,7 @@ The entry point name (`nokia_sros`) becomes the platform key in the driver regis
 ### 3. Install and verify
 
 ```bash
-pip install network-mcp-driver-nokia
+pip install latticio-driver-nokia
 ```
 
 Use the `net_list_plugins` tool to verify the driver was discovered:

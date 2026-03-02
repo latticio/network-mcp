@@ -1,5 +1,5 @@
 [project]
-name = "network-mcp"
+name = "latticio"
 version = "7.0.0"
 description = "Multi-vendor Network MCP Platform for AI-powered network automation"
 requires-python = ">=3.11"
@@ -54,10 +54,11 @@ otel = [
     "opentelemetry-exporter-otlp-proto-grpc>=1.20",
     "opentelemetry-exporter-prometheus>=0.45b0",
 ]
-all = ["network-mcp[arista,cisco,ssh,juniper,gnmi,anta,netbox,otel,redis]"]
-dev = ["pytest", "pytest-asyncio", "pytest-cov", "pytest-benchmark>=4.0", "hypothesis>=6.0", "ruff", "mypy", "bandit", "pip-audit", "pre-commit", "network-mcp[otel]"]
+all = ["latticio[arista,cisco,ssh,juniper,gnmi,anta,netbox,otel,redis]"]
+dev = ["pytest", "pytest-asyncio", "pytest-cov", "pytest-benchmark>=4.0", "hypothesis>=6.0", "ruff", "mypy", "bandit", "pip-audit", "pre-commit", "latticio[otel]"]
 
 [project.scripts]
+latticio = "network_mcp.server:main"
 network-mcp = "network_mcp.server:main"
 
 [build-system]

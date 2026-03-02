@@ -7,7 +7,7 @@ NETCONF as the primary transport. Falls back to SSH when NETCONF port
 SSH fallback uses scrapli for persistent, secure sessions with proper
 host key verification.
 
-Requires the ``juniper`` optional extra: ``pip install network-mcp[juniper]``
+Requires the ``juniper`` optional extra: ``pip install latticio[juniper]``
 """
 
 from __future__ import annotations
@@ -422,7 +422,7 @@ class JunosScrapliTransport:
         timeout_ops: float = 30.0,
     ) -> None:
         if not HAS_SCRAPLI:
-            raise ImportError("scrapli not installed. Install with: pip install network-mcp[juniper]")
+            raise ImportError("scrapli not installed. Install with: pip install latticio[juniper]")
         driver_kwargs: dict[str, Any] = {
             "host": host,
             "auth_username": username,
@@ -634,7 +634,7 @@ class JunosDriver:
         else:
             logger.warning(
                 "scrapli not installed — SSH fallback unavailable for %s. "
-                "Install with: pip install network-mcp[juniper]",
+                "Install with: pip install latticio[juniper]",
                 host,
             )
             self._ssh_transport = None
@@ -796,7 +796,7 @@ class JunosDriver:
         if not self._host or not self._username:
             raise ConnectionError("SSH not configured. Call connect() first.")
         if self._ssh_transport is None:
-            raise ConnectionError("SSH transport not available. Install scrapli: pip install network-mcp[juniper]")
+            raise ConnectionError("SSH transport not available. Install scrapli: pip install latticio[juniper]")
 
         try:
             return self._ssh_transport.send_command(command)
@@ -870,7 +870,7 @@ class JunosDriver:
     def _ssh_config(self, commands: list[str]) -> list[str]:
         """Execute config commands via SSH (scrapli)."""
         if self._ssh_transport is None:
-            raise ConnectionError("SSH transport not available. Install scrapli: pip install network-mcp[juniper]")
+            raise ConnectionError("SSH transport not available. Install scrapli: pip install latticio[juniper]")
         try:
             output = self._ssh_transport.send_config(commands)
             return [output]

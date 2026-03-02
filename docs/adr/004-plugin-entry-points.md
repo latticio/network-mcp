@@ -36,7 +36,7 @@ Three entry point groups are defined:
 
 ### Positive
 
-- **Standard Python mechanism** — `pip install network-mcp-driver-nokia` immediately makes the Nokia driver available. No config file editing required.
+- **Standard Python mechanism** — `pip install latticio-driver-nokia` immediately makes the Nokia driver available. No config file editing required.
 - **Package management integration** — plugins are installed, upgraded, and removed via pip/uv like any other package. Dependencies are handled by the package manager.
 - **Environment-portable** — works identically in local development, Docker containers, and production deployments. No path-dependent configuration.
 - **Discoverable** — `importlib.metadata.entry_points()` provides a clean API for listing all installed plugins, which powers the `net_list_plugins` tool.

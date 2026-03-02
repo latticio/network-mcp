@@ -46,7 +46,7 @@ class VaultCredentialProvider:
     def __init__(self, addr: str, token: str, mount_point: str = "secret"):
         hvac = _import_hvac()
         if hvac is None:
-            raise ImportError("hvac not installed. Install with: pip install network-mcp[vault]")
+            raise ImportError("hvac not installed. Install with: pip install latticio[vault]")
         self._client = hvac.Client(url=addr, token=token)
         self._mount = mount_point
         if not self._client.is_authenticated():

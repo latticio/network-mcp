@@ -628,7 +628,7 @@ class TestJunosDriverNoScrapli:
         assert driver._transport == "ssh"
         assert driver._ssh_transport is None
         mock_logger.warning.assert_any_call(
-            "scrapli not installed — SSH fallback unavailable for %s. Install with: pip install network-mcp[juniper]",
+            "scrapli not installed — SSH fallback unavailable for %s. Install with: pip install latticio[juniper]",
             "10.0.0.1",
         )
 

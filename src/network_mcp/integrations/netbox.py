@@ -69,7 +69,7 @@ def _with_netbox_retry(func, *args, **kwargs):
 
 _PYNETBOX_MISSING = {
     "status": "error",
-    "error": "pynetbox not installed. Install with: pip install network-mcp[netbox]",
+    "error": "pynetbox not installed. Install with: pip install latticio[netbox]",
 }
 
 _NETBOX_NOT_CONFIGURED = {

@@ -42,7 +42,7 @@ try:
 except ImportError:
     pyjwt = None  # type: ignore[assignment]
 
-JWT_NOT_INSTALLED_ERROR = "PyJWT is not installed. Install with: pip install network-mcp[auth]"
+JWT_NOT_INSTALLED_ERROR = "PyJWT is not installed. Install with: pip install latticio[auth]"
 
 # --- X.509 / cryptography library availability check ---
 
@@ -58,7 +58,7 @@ except ImportError:
     Encoding = None  # type: ignore[assignment,misc]
     NameOID = None  # type: ignore[assignment]
 
-CRYPTO_NOT_INSTALLED_ERROR = "cryptography is not installed. Install with: pip install network-mcp[mtls]"
+CRYPTO_NOT_INSTALLED_ERROR = "cryptography is not installed. Install with: pip install latticio[mtls]"
 
 # Regex to detect JWT tokens in output (three base64url segments separated by dots)
 JWT_PATTERN = re.compile(r"eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}")
@@ -664,7 +664,7 @@ class CertificateVerifier:
     them against a CA certificate, and maps certificate subject attributes to
     AccessToken instances with appropriate scopes.
 
-    Requires the ``cryptography`` library (pip install network-mcp[mtls]).
+    Requires the ``cryptography`` library (pip install latticio[mtls]).
     """
 
     def __init__(
