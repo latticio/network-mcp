@@ -1,0 +1,62 @@
+{
+  "ins_api": {
+    "type": "cli_show",
+    "version": "1",
+    "sid": "1",
+    "outputs": {
+      "output": {
+        "input": "show lldp neighbors detail",
+        "msg": "Success",
+        "code": "200",
+        "body": {
+          "TABLE_nbor_detail": {
+            "ROW_nbor_detail": [
+              {
+                "chassis_type": "4",
+                "chassis_id": "0050.56a0.0201",
+                "l_port_id": "Ethernet1/1",
+                "port_type": "5",
+                "port_id": "Ethernet1/1",
+                "sys_name": "n9k-spine-02",
+                "sys_desc": "Cisco Nexus Operating System (NX-OS) Software 10.3(2)",
+                "port_desc": "Uplink to spine-01",
+                "ttl": 120,
+                "sys_capability": "B, R",
+                "mgmt_addr": "10.0.0.2",
+                "mgmt_addr_type": "1"
+              },
+              {
+                "chassis_type": "4",
+                "chassis_id": "0050.56a0.0301",
+                "l_port_id": "Ethernet1/2",
+                "port_type": "5",
+                "port_id": "Ethernet1/1",
+                "sys_name": "n9k-leaf-01",
+                "sys_desc": "Cisco Nexus Operating System (NX-OS) Software 10.3(2)",
+                "port_desc": "Uplink to spine-01",
+                "ttl": 120,
+                "sys_capability": "B, R",
+                "mgmt_addr": "10.0.1.2",
+                "mgmt_addr_type": "1"
+              },
+              {
+                "chassis_type": "4",
+                "chassis_id": "0050.56a0.ee01",
+                "l_port_id": "Ethernet1/1",
+                "port_type": "5",
+                "port_id": "Ethernet49/1",
+                "sys_name": "arista-leaf-03.lab.local",
+                "sys_desc": "Arista Networks EOS version 4.31.0F",
+                "port_desc": "To NX-OS spine",
+                "ttl": 120,
+                "sys_capability": "B, R",
+                "mgmt_addr": "10.0.0.5",
+                "mgmt_addr_type": "1"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

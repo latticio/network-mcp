@@ -1,0 +1,15 @@
+apiVersion: v2
+name: network-mcp
+description: Multi-vendor Network MCP Platform
+version: 1.0.0
+appVersion: "4.0.0"
+type: application
+keywords:
+  - network
+  - mcp
+  - automation
+  - arista
+  - cisco
+  - juniper
+maintainers:
+  - name: Latticio Labs

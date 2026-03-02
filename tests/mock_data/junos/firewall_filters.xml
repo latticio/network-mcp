@@ -1,0 +1,33 @@
+<firewall-information>
+  <filter-information>
+    <filter-name>PROTECT-RE</filter-name>
+    <counter>
+      <counter-name>allow-ssh</counter-name>
+      <packet-count>15432</packet-count>
+      <byte-count>1234560</byte-count>
+    </counter>
+    <counter>
+      <counter-name>allow-bgp</counter-name>
+      <packet-count>98765</packet-count>
+      <byte-count>7654320</byte-count>
+    </counter>
+    <counter>
+      <counter-name>deny-all</counter-name>
+      <packet-count>4321</packet-count>
+      <byte-count>345678</byte-count>
+    </counter>
+  </filter-information>
+  <filter-information>
+    <filter-name>CUSTOMER-INGRESS</filter-name>
+    <counter>
+      <counter-name>permit-web</counter-name>
+      <packet-count>567890</packet-count>
+      <byte-count>45678900</byte-count>
+    </counter>
+    <counter>
+      <counter-name>rate-limit-icmp</counter-name>
+      <packet-count>1234</packet-count>
+      <byte-count>98765</byte-count>
+    </counter>
+  </filter-information>
+</firewall-information>

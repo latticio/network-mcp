@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-config
+  labels:
+    app: {{ .Release.Name }}
+data:
+  EOS_READ_ONLY: {{ .Values.config.readOnly | quote }}
+  EOS_DEMO_MODE: {{ .Values.config.demoMode | quote }}
+  LOG_LEVEL: {{ .Values.config.logLevel | quote }}
+  EOS_TRANSPORT: {{ .Values.config.transport | quote }}
+  EOS_CACHE_ENABLED: {{ .Values.config.cacheEnabled | quote }}
+  EOS_CIRCUIT_BREAKER: {{ .Values.config.circuitBreaker | quote }}
+  EOS_METRICS: {{ .Values.config.metrics | quote }}
+  EOS_PROGRESSIVE_DISCOVERY: {{ .Values.config.progressiveDiscovery | quote }}
+  RATE_LIMIT_SHOW: {{ .Values.config.rateLimitShow | quote }}
+  RATE_LIMIT_CONFIG: {{ .Values.config.rateLimitConfig | quote }}
+  TIMEOUT_CONNECT: {{ .Values.config.timeoutConnect | quote }}
+  TIMEOUT_SHOW: {{ .Values.config.timeoutShow | quote }}
+  TIMEOUT_CONFIG: {{ .Values.config.timeoutConfig | quote }}
+  EOS_INVENTORY_FILE: "/app/config/devices.yaml"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-devices
+  labels:
+    app: {{ .Release.Name }}
+data:
+  devices.yaml: |
+    {{- .Values.devices | nindent 4 }}

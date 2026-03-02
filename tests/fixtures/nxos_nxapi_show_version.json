@@ -1,0 +1,73 @@
+{
+  "show_version": {
+    "host_name": "nxos-leaf-01",
+    "chassis_id": "Nexus9000 C93180YC-FX",
+    "nxos_ver_str": "10.3(2)",
+    "proc_board_id": "FDO24511LJB",
+    "kern_uptm_days": 100,
+    "kern_uptm_hrs": 5,
+    "kern_uptm_mins": 30,
+    "kern_uptm_secs": 15
+  },
+  "show_interface": {
+    "TABLE_interface": {
+      "ROW_interface": [
+        {
+          "interface": "Ethernet1/1",
+          "state": "up",
+          "admin_state": "up",
+          "desc": "To spine-01 Eth1",
+          "eth_speed": "10 Gb/s",
+          "eth_mtu": "9216",
+          "eth_hw_addr": "aabb.ccdd.ee01",
+          "eth_bia_addr": "aabb.ccdd.ee01"
+        },
+        {
+          "interface": "Ethernet1/2",
+          "state": "down",
+          "admin_state": "down",
+          "desc": "",
+          "eth_speed": "auto",
+          "eth_mtu": "1500",
+          "eth_hw_addr": "aabb.ccdd.ee02",
+          "eth_bia_addr": "aabb.ccdd.ee02"
+        }
+      ]
+    }
+  },
+  "show_ip_arp": {
+    "TABLE_vrf": {
+      "ROW_vrf": {
+        "vrf-name-out": "default",
+        "TABLE_adj": {
+          "ROW_adj": [
+            {
+              "ip-addr-out": "10.1.1.1",
+              "mac": "aabb.ccdd.0010",
+              "intf-out": "Ethernet1/1",
+              "time-stamp": "00:15:30"
+            },
+            {
+              "ip-addr-out": "10.1.1.2",
+              "mac": "AABB.CCDD.0011",
+              "intf-out": "Ethernet1/1",
+              "time-stamp": "-"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "show_lldp_neighbors_detail": {
+    "TABLE_nbor_detail": {
+      "ROW_nbor_detail": [
+        {
+          "l_port_id": "Ethernet1/1",
+          "sys_name": "spine-01.lab",
+          "port_id": "Ethernet1",
+          "sys_desc": "Arista EOS version 4.31.1F"
+        }
+      ]
+    }
+  }
+}

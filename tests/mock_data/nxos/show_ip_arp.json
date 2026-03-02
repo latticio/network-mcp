@@ -1,0 +1,62 @@
+{
+  "ins_api": {
+    "type": "cli_show",
+    "version": "1",
+    "sid": "1",
+    "outputs": {
+      "output": {
+        "input": "show ip arp",
+        "msg": "Success",
+        "code": "200",
+        "body": {
+          "TABLE_vrf": {
+            "ROW_vrf": [
+              {
+                "vrf-name-out": "default",
+                "cnt-total": 3,
+                "TABLE_adj": {
+                  "ROW_adj": [
+                    {
+                      "intf-out": "Ethernet1/1",
+                      "ip-addr-out": "10.0.0.2",
+                      "time-stamp": "00:15:32",
+                      "mac": "0050.56a0.0201",
+                      "flags": ""
+                    },
+                    {
+                      "intf-out": "Ethernet1/2",
+                      "ip-addr-out": "10.0.1.2",
+                      "time-stamp": "00:05:10",
+                      "mac": "0050.56a0.0301",
+                      "flags": ""
+                    },
+                    {
+                      "intf-out": "Ethernet1/1",
+                      "ip-addr-out": "10.0.0.3",
+                      "time-stamp": "00:20:45",
+                      "mac": "0050.56a0.0202",
+                      "flags": ""
+                    }
+                  ]
+                }
+              },
+              {
+                "vrf-name-out": "management",
+                "cnt-total": 1,
+                "TABLE_adj": {
+                  "ROW_adj": {
+                    "intf-out": "mgmt0",
+                    "ip-addr-out": "192.168.1.1",
+                    "time-stamp": "00:01:05",
+                    "mac": "0050.56a0.0001",
+                    "flags": ""
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

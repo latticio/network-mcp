@@ -1,0 +1,16 @@
+<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" xmlns:junos="http://xml.juniper.net/junos/23.4R1/junos">
+  <lldp-neighbors-information>
+    <lldp-neighbor-information>
+      <lldp-local-port-id>ge-0/0/0</lldp-local-port-id>
+      <lldp-remote-system-name>spine-02.lab</lldp-remote-system-name>
+      <lldp-remote-port-id>ge-0/0/1</lldp-remote-port-id>
+      <lldp-remote-system-description>Juniper Networks QFX5120-48T, kernel JUNOS 23.4R1.10</lldp-remote-system-description>
+    </lldp-neighbor-information>
+    <lldp-neighbor-information>
+      <lldp-local-port-id>xe-0/0/0</lldp-local-port-id>
+      <lldp-remote-system-name>leaf-01.lab</lldp-remote-system-name>
+      <lldp-remote-port-id>xe-0/0/0</lldp-remote-port-id>
+      <lldp-remote-system-description>Juniper Networks QFX5110-48S, kernel JUNOS 23.2R1.15</lldp-remote-system-description>
+    </lldp-neighbor-information>
+  </lldp-neighbors-information>
+</rpc-reply>

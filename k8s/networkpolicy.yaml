@@ -1,0 +1,33 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: network-mcp-netpol
+  namespace: network-mcp
+  labels:
+    app: network-mcp
+spec:
+  podSelector:
+    matchLabels:
+      app: network-mcp
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              network-mcp-access: "true"
+      ports:
+        - protocol: TCP
+          port: 8000
+  egress:
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 830
+        - protocol: TCP
+          port: 6030
+        - protocol: TCP
+          port: 6379

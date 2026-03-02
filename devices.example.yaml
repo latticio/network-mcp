@@ -1,0 +1,80 @@
+# Device inventory for network-mcp
+# Devices can be referenced by name in tool calls
+#
+# The 'platform' field selects the driver for each device.
+# Valid platforms: eos, iosxe, nxos, junos
+# Default: eos (if omitted, backward compatible with existing inventories)
+
+devices:
+  # Spine switches
+  spine-01:
+    host: 10.0.0.1
+    platform: eos           # Arista EOS (default if omitted)
+    username: admin
+    password: arista123  # EXAMPLE ONLY — never commit real credentials
+    transport: https
+    port: 443
+    role: spine
+    groups: [dc1, fabric-a]
+    tags: [evpn, production]
+
+  spine-02:
+    host: 10.0.0.2
+    platform: eos
+    role: spine
+    groups: [dc1, fabric-a]
+    tags: [evpn, production]
+    # Uses default credentials from env vars
+
+  # Leaf switches (MLAG pair)
+  leaf-01a:
+    host: 10.0.1.1
+    platform: eos
+    transport: https
+    role: leaf
+    groups: [dc1, rack-01]
+    tags: [production]
+    mlag_peer: leaf-01b
+
+  leaf-01b:
+    host: 10.0.1.2
+    platform: eos
+    role: leaf
+    groups: [dc1, rack-01]
+    tags: [production]
+    mlag_peer: leaf-01a
+
+  # Out-of-band management
+  mgmt-switch:
+    host: 192.168.1.1
+    transport: http  # Lab device, HTTP only
+    port: 80
+    role: management
+    groups: [oob]
+    tags: [lab]
+    # platform omitted — defaults to 'eos'
+
+  # Multi-vendor examples (all drivers are production-ready):
+  core-rtr-01:
+    host: 10.0.0.10
+    platform: iosxe       # Cisco IOS-XE (RESTCONF + SSH fallback)
+    transport: restconf
+    role: core
+    groups: [dc1]
+    tags: [production]
+
+  dc-core-01:
+    host: 10.0.0.20
+    platform: nxos        # Cisco NX-OS (NX-API + SSH fallback)
+    transport: nxapi
+    role: core
+    groups: [dc1]
+    tags: [production]
+
+  edge-rtr-01:
+    host: 10.0.0.30
+    platform: junos       # Juniper JunOS (NETCONF)
+    transport: netconf
+    role: edge
+    groups: [wan]
+    tags: [production]

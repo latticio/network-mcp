@@ -1,0 +1,8 @@
+global:
+  scrape_interval: 30s
+
+scrape_configs:
+  - job_name: "network-mcp"
+    static_configs:
+      - targets: ["network-mcp:8000"]
+    metrics_path: "/metrics"

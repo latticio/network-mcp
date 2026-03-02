@@ -1,0 +1,27 @@
+{
+  "TABLE_connections": {
+    "ROW_connections": [
+      {
+        "peer-type": "vsmart",
+        "system-ip": "172.16.0.1",
+        "site-id": 100,
+        "state": "up",
+        "uptime": "5:12:30:15"
+      },
+      {
+        "peer-type": "vmanage",
+        "system-ip": "172.16.0.2",
+        "site-id": 100,
+        "state": "up",
+        "uptime": "5:12:30:10"
+      },
+      {
+        "peer-type": "vbond",
+        "system-ip": "172.16.0.3",
+        "site-id": 0,
+        "state": "up",
+        "uptime": "5:12:29:58"
+      }
+    ]
+  }
+}

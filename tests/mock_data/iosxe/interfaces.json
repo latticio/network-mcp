@@ -1,0 +1,62 @@
+{
+  "ietf-interfaces:interfaces": {
+    "interface": [
+      {
+        "name": "GigabitEthernet1",
+        "type": "iana-if-type:ethernetCsmacd",
+        "enabled": true,
+        "oper-status": "up",
+        "description": "Management interface",
+        "phys-address": "00:50:56:a0:00:01",
+        "speed": 1000000000,
+        "mtu": 1500,
+        "ietf-ip:ipv4": {
+          "address": [
+            {
+              "ip": "10.10.10.1",
+              "netmask": "255.255.255.0"
+            }
+          ]
+        }
+      },
+      {
+        "name": "GigabitEthernet2",
+        "type": "iana-if-type:ethernetCsmacd",
+        "enabled": true,
+        "oper-status": "up",
+        "description": "Uplink to spine-01",
+        "phys-address": "00:50:56:a0:00:02",
+        "speed": 10000000000,
+        "mtu": 9000,
+        "ietf-ip:ipv4": {
+          "address": [
+            {
+              "ip": "10.0.0.1",
+              "netmask": "255.255.255.252"
+            }
+          ]
+        }
+      },
+      {
+        "name": "GigabitEthernet3",
+        "type": "iana-if-type:ethernetCsmacd",
+        "enabled": false,
+        "oper-status": "down",
+        "description": "",
+        "phys-address": "00:50:56:a0:00:03",
+        "speed": 1000000000,
+        "mtu": 1500
+      },
+      {
+        "name": "Loopback0",
+        "type": "iana-if-type:softwareLoopback",
+        "enabled": true,
+        "oper-status": "up",
+        "description": "Router ID",
+        "phys-address": "",
+        "speed": 0,
+        "mtu": 1514
+      }
+    ]
+  }
+}

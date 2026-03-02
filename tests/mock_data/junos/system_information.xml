@@ -1,0 +1,10 @@
+<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" xmlns:junos="http://xml.juniper.net/junos/23.4R1/junos">
+  <system-information>
+    <hardware-model>QFX5120-48T</hardware-model>
+    <os-name>junos</os-name>
+    <os-version>23.4R1.10</os-version>
+    <serial-number>WH0218440033</serial-number>
+    <host-name>junos-spine-01</host-name>
+    <up-time>864000</up-time>
+  </system-information>
+</rpc-reply>

@@ -1,0 +1,12 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: network-mcp-pdb
+  namespace: network-mcp
+  labels:
+    app: network-mcp
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: network-mcp

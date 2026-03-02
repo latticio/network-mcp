@@ -1,0 +1,84 @@
+replicaCount: 1
+
+image:
+  repository: network-mcp
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8000
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: network-mcp.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: network-mcp-tls
+      hosts:
+        - network-mcp.example.com
+
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "250m"
+  limits:
+    memory: "512Mi"
+    cpu: "1000m"
+
+config:
+  readOnly: "true"
+  demoMode: "false"
+  logLevel: "INFO"
+  transport: "https"
+  cacheEnabled: "true"
+  circuitBreaker: "false"
+  metrics: "false"
+  progressiveDiscovery: "false"
+  rateLimitShow: "5.0"
+  rateLimitConfig: "1.0"
+  timeoutConnect: "10.0"
+  timeoutShow: "30.0"
+  timeoutConfig: "60.0"
+
+secrets:
+  eosPassword: ""
+  authSecretKey: ""
+  cvpToken: ""
+
+# devices.yaml content mounted as a ConfigMap
+devices: |
+  devices:
+    - name: spine-01
+      host: 10.0.0.1
+      platform: eos
+      role: spine
+      groups: [fabric]
+
+securityContext:
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8000
+  initialDelaySeconds: 15
+  periodSeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 8000
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3

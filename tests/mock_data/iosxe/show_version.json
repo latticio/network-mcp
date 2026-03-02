@@ -1,0 +1,31 @@
+{
+  "Cisco-IOS-XE-native:native": {
+    "hostname": "csr1000v-01",
+    "version": "17.3.4a",
+    "license": {
+      "udi": {
+        "pid": "CSR1000V",
+        "sn": "9ESGOBARV9D"
+      }
+    },
+    "service": {
+      "timestamps": {
+        "debug": {
+          "datetime": {
+            "msec": {}
+          }
+        },
+        "log": {
+          "datetime": {
+            "msec": {}
+          }
+        }
+      }
+    },
+    "ip": {
+      "domain": {
+        "name": "lab.local"
+      }
+    }
+  }
+}

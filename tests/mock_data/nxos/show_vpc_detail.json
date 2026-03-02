@@ -1,0 +1,61 @@
+{
+  "ins_api": {
+    "outputs": {
+      "output": {
+        "body": {
+          "vpc-domain-id": 1,
+          "vpc-role": "primary",
+          "vpc-peer-status": "peer adjacency formed ok",
+          "vpc-peer-keepalive-status": "peer is alive",
+          "vpc-peer-link-status": "up",
+          "vpc-peer-link-port-channel": "Po1",
+          "vpc-peer-keepalive-dest": "10.0.0.2",
+          "vpc-peer-keepalive-src": "10.0.0.1",
+          "vpc-peer-keepalive-vrf": "management",
+          "vpc-keepalive-interval": 1000,
+          "vpc-keepalive-timeout": 5000,
+          "TABLE_consistency_params": {
+            "ROW_consistency_params": [
+              {
+                "param-name": "STP Mode",
+                "local-value": "Rapid-PVST",
+                "peer-value": "Rapid-PVST",
+                "result": "success"
+              },
+              {
+                "param-name": "STP Disabled",
+                "local-value": "None",
+                "peer-value": "None",
+                "result": "success"
+              },
+              {
+                "param-name": "LACP Mode",
+                "local-value": "normal",
+                "peer-value": "fast",
+                "result": "failed"
+              }
+            ]
+          },
+          "TABLE_vpc_detail": {
+            "ROW_vpc_detail": [
+              {
+                "vpc-id": 10,
+                "vpc-port-channel": "Po10",
+                "vpc-port-status": "up",
+                "vpc-consistency-status": "consistent",
+                "active-vlans": "100,200,300"
+              },
+              {
+                "vpc-id": 20,
+                "vpc-port-channel": "Po20",
+                "vpc-port-status": "up",
+                "vpc-consistency-status": "consistent",
+                "active-vlans": "400,500"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

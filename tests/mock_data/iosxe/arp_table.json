@@ -1,0 +1,44 @@
+{
+  "Cisco-IOS-XE-arp-oper:arp-data": {
+    "arp-vrf": [
+      {
+        "vrf": "default",
+        "arp-entry": [
+          {
+            "address": "10.0.0.2",
+            "hardware": "0050.56a0.0010",
+            "interface": "GigabitEthernet2",
+            "mode": "dynamic",
+            "time": 120.5
+          },
+          {
+            "address": "10.0.0.3",
+            "hardware": "0050.56a0.0020",
+            "interface": "GigabitEthernet2",
+            "mode": "dynamic",
+            "time": 85.0
+          },
+          {
+            "address": "10.10.10.254",
+            "hardware": "0050.56a0.00ff",
+            "interface": "GigabitEthernet1",
+            "mode": "dynamic",
+            "time": 300.0
+          }
+        ]
+      },
+      {
+        "vrf": "MGMT",
+        "arp-entry": [
+          {
+            "address": "192.168.1.1",
+            "hardware": "aabb.cc00.0100",
+            "interface": "GigabitEthernet1",
+            "mode": "dynamic",
+            "time": 60.0
+          }
+        ]
+      }
+    ]
+  }
+}

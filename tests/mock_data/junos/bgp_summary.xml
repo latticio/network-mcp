@@ -1,0 +1,24 @@
+<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" xmlns:junos="http://xml.juniper.net/junos/23.4R1/junos">
+  <bgp-information>
+    <local-id>10.0.0.1</local-id>
+    <local-as>65000</local-as>
+    <bgp-peer>
+      <peer-address>10.0.0.2+179</peer-address>
+      <peer-state>Established</peer-state>
+      <elapsed-time>1234567</elapsed-time>
+      <bgp-rib>
+        <received-prefix-count>150</received-prefix-count>
+        <active-prefix-count>148</active-prefix-count>
+      </bgp-rib>
+    </bgp-peer>
+    <bgp-peer>
+      <peer-address>10.0.0.3+179</peer-address>
+      <peer-state>Active</peer-state>
+      <elapsed-time>100</elapsed-time>
+      <bgp-rib>
+        <received-prefix-count>0</received-prefix-count>
+        <active-prefix-count>0</active-prefix-count>
+      </bgp-rib>
+    </bgp-peer>
+  </bgp-information>
+</rpc-reply>

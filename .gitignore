@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Environment variables
+.env
+.env.local
+devices.yaml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.hypothesis/
+coverage.xml
+
+# Linting
+.ruff_cache/
+.mypy_cache/
+
+# Security
+*.pem
+*.key
+*.crt
+
+# Claude Code (local user config)
+.claude/settings.local.json
+.claude/memory/
+.claude/worktrees/

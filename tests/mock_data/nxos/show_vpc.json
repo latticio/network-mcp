@@ -1,0 +1,44 @@
+{
+  "ins_api": {
+    "version": "1",
+    "type": "cli_show",
+    "sid": "1",
+    "outputs": {
+      "output": {
+        "code": "200",
+        "msg": "Success",
+        "input": "show vpc",
+        "body": {
+          "vpc-domain-id": "1",
+          "vpc-role": "primary",
+          "vpc-peer-status": "peer adjacency formed ok",
+          "vpc-peer-keepalive-status": "peer is alive",
+          "vpc-peer-link-status": "up",
+          "vpc-peer-link-port-channel": "Po1",
+          "TABLE_vpc": {
+            "ROW_vpc": [
+              {
+                "vpc-id": "10",
+                "vpc-port-channel": "Po10",
+                "vpc-port-status": "up",
+                "vpc-consistency-status": "consistent"
+              },
+              {
+                "vpc-id": "20",
+                "vpc-port-channel": "Po20",
+                "vpc-port-status": "up",
+                "vpc-consistency-status": "consistent"
+              },
+              {
+                "vpc-id": "30",
+                "vpc-port-channel": "Po30",
+                "vpc-port-status": "down",
+                "vpc-consistency-status": "inconsistent"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

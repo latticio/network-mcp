@@ -1,0 +1,34 @@
+<rpc-reply xmlns="urn:ietf:params:xml:ns:netconf:base:1.0" xmlns:junos="http://xml.juniper.net/junos/23.4R1/junos">
+  <interface-information>
+    <physical-interface>
+      <name>ge-0/0/0</name>
+      <admin-status>up</admin-status>
+      <oper-status>up</oper-status>
+      <description>uplink to spine-02</description>
+      <speed>1000mbps</speed>
+      <mtu>9216</mtu>
+      <current-physical-address>00:05:86:71:62:01</current-physical-address>
+      <hardware-physical-address>00:05:86:71:62:01</hardware-physical-address>
+    </physical-interface>
+    <physical-interface>
+      <name>ge-0/0/1</name>
+      <admin-status>down</admin-status>
+      <oper-status>down</oper-status>
+      <description></description>
+      <speed>1000mbps</speed>
+      <mtu>1514</mtu>
+      <current-physical-address>00:05:86:71:62:02</current-physical-address>
+      <hardware-physical-address>00:05:86:71:62:02</hardware-physical-address>
+    </physical-interface>
+    <physical-interface>
+      <name>xe-0/0/0</name>
+      <admin-status>up</admin-status>
+      <oper-status>up</oper-status>
+      <description>10G uplink</description>
+      <speed>10Gbps</speed>
+      <mtu>9216</mtu>
+      <current-physical-address>00:05:86:71:62:10</current-physical-address>
+      <hardware-physical-address>00:05:86:71:62:10</hardware-physical-address>
+    </physical-interface>
+  </interface-information>
+</rpc-reply>
