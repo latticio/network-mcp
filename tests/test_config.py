@@ -249,3 +249,62 @@ class TestConfigModuleNameValidation:
             net_disabled_modules="",
         )
         assert s.disabled_modules == set()
+
+
+class TestVendorSettings:
+    """Tests for NET_VENDORS parsing and validation."""
+
+    def _base(self, **kwargs):
+        return NetworkSettings(net_username="admin", net_password="", net_transport="https", **kwargs)
+
+    def test_enabled_vendors_none_by_default(self):
+        """NET_VENDORS unset means None — all installed vendor tools should load."""
+        s = self._base()
+        assert s.net_vendors is None
+        assert s.enabled_vendors is None
+
+    def test_enabled_vendors_single(self):
+        s = self._base(net_vendors="eos")
+        assert s.enabled_vendors == {"eos"}
+
+    def test_enabled_vendors_multiple(self):
+        s = self._base(net_vendors="eos,iosxe")
+        assert s.enabled_vendors == {"eos", "iosxe"}
+
+    def test_enabled_vendors_whitespace_stripped(self):
+        s = self._base(net_vendors=" eos , nxos , junos ")
+        assert s.enabled_vendors == {"eos", "nxos", "junos"}
+
+    def test_enabled_vendors_lowercased(self):
+        """Vendor names should be normalised to lowercase."""
+        s = self._base(net_vendors="EOS,IOSXE")
+        assert s.enabled_vendors == {"eos", "iosxe"}
+
+    def test_all_four_vendors_accepted(self):
+        s = self._base(net_vendors="eos,iosxe,nxos,junos")
+        assert s.enabled_vendors == {"eos", "iosxe", "nxos", "junos"}
+
+    def test_unknown_vendor_rejected(self):
+        with pytest.raises(ValidationError, match="Unknown vendor in NET_VENDORS"):
+            self._base(net_vendors="bogus")
+
+    def test_unknown_vendor_mixed_with_valid_rejected(self):
+        with pytest.raises(ValidationError, match="Unknown vendor in NET_VENDORS"):
+            self._base(net_vendors="eos,bogus")
+
+    def test_empty_string_yields_empty_set(self):
+        """An empty NET_VENDORS string yields an empty set (no vendors)."""
+        s = self._base(net_vendors="")
+        assert s.enabled_vendors == set()
+
+    def test_env_var_read(self):
+        """NET_VENDORS is read from the environment variable."""
+        env = {"NET_VENDORS": "iosxe,nxos"}
+        for k, v in env.items():
+            os.environ[k] = v
+        try:
+            s = NetworkSettings()
+            assert s.enabled_vendors == {"iosxe", "nxos"}
+        finally:
+            for k in env:
+                os.environ.pop(k, None)

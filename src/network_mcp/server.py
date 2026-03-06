@@ -453,6 +453,42 @@ if settings.rbac_enabled and settings.auth_enabled:
     logger.info("RBAC enabled — tool access controlled by JWT scope claims")
 
 
+# --- Vendor dependency availability flags ---
+# Checked once at startup so module loading blocks can gate on them efficiently.
+# These mirror the pattern used by gNMI (GNMI_AVAILABLE from gnmi_connection.py).
+
+try:
+    import pyeapi as _pyeapi_check  # noqa: F401
+
+    _PYEAPI_AVAILABLE = True
+except ImportError:
+    _PYEAPI_AVAILABLE = False
+
+try:
+    import httpx as _httpx_check  # noqa: F401
+
+    _HTTPX_AVAILABLE = True
+except ImportError:
+    _HTTPX_AVAILABLE = False
+
+try:
+    from scrapli_netconf.driver import NetconfDriver as _netconf_check  # noqa: F401
+
+    _SCRAPLI_NETCONF_AVAILABLE = True
+except ImportError:
+    _SCRAPLI_NETCONF_AVAILABLE = False
+
+
+def _vendor_enabled(vendor: str) -> bool:
+    """Return True when the vendor is included in NET_VENDORS (or NET_VENDORS is unset).
+
+    Args:
+        vendor: Lowercase vendor platform string (e.g. "eos", "iosxe", "nxos", "junos").
+    """
+    ev = settings.enabled_vendors
+    return ev is None or vendor in ev
+
+
 # --- Module load tracking ---
 # Track loaded/failed modules for health endpoint visibility
 _loaded_modules: set[str] = set()
@@ -563,50 +599,67 @@ if _enabled is not None and _disabled:
 _progressive = settings.net_progressive_discovery
 if _progressive:
     logger.info("Progressive discovery enabled — loading only meta-tools + workflow tools at startup")
-    _modules_to_load = ["workflows"]
-elif _enabled is not None:
-    # Allowlist mode: only load explicitly enabled modules
-    _modules_to_load = [m for m in _ALL_MODULES if m in _enabled]
-    _skipped = [m for m in _ALL_MODULES if m not in _enabled]
-    if _skipped:
-        logger.info(f"NET_ENABLED_MODULES active — loading only: {', '.join(_modules_to_load)}")
-else:
-    # Default mode: load all core, apply disabled filter to optional
-    _modules_to_load = list(_CORE_MODULES)
-    for _mod in _OPTIONAL_MODULES:
-        if _mod not in _disabled:
-            _modules_to_load.append(_mod)
-        else:
-            logger.info(f"Module disabled by configuration: {_mod}")
 
-for _module_name in _modules_to_load:
-    _load_module(
-        _module_name,
-        f".tools.{_module_name}",
-        required=(_module_name in _CORE_MODULES),
-    )
+# --- EOS-specific tool modules (require pyeapi + eos vendor allowed) ---
+# These tools send Arista EOS commands via pyeapi through the connection manager.
+# Skip them when pyeapi is not installed or the operator has excluded eos via NET_VENDORS.
+_eos_tools_allowed = _PYEAPI_AVAILABLE and _vendor_enabled("eos")
+
+if not _PYEAPI_AVAILABLE:
+    logger.info("EOS tools not loaded (pyeapi not installed; install with: pip install latticio[eos])")
+elif not _vendor_enabled("eos"):
+    logger.info("EOS tools not loaded (eos not in NET_VENDORS)")
+
+if _eos_tools_allowed:
+    if _progressive:
+        _modules_to_load = ["workflows"]
+    elif _enabled is not None:
+        # Allowlist mode: only load explicitly enabled modules
+        _modules_to_load = [m for m in _ALL_MODULES if m in _enabled]
+        _skipped = [m for m in _ALL_MODULES if m not in _enabled]
+        if _skipped:
+            logger.info(f"NET_ENABLED_MODULES active — loading only: {', '.join(_modules_to_load)}")
+    else:
+        # Default mode: load all core, apply disabled filter to optional
+        _modules_to_load = list(_CORE_MODULES)
+        for _mod in _OPTIONAL_MODULES:
+            if _mod not in _disabled:
+                _modules_to_load.append(_mod)
+            else:
+                logger.info(f"Module disabled by configuration: {_mod}")
+
+    for _module_name in _modules_to_load:
+        _load_module(
+            _module_name,
+            f".tools.{_module_name}",
+            required=(_module_name in _CORE_MODULES),
+        )
 
 # gNMI tools — loaded only when pygnmi is installed
-# Also respects NET_ENABLED_MODULES: if set, 'gnmi' must be in the list
+# Also respects NET_ENABLED_MODULES and NET_VENDORS (eos): gNMI targets Arista EOS devices.
 # Not loaded in progressive discovery mode (use eos_load_tool_category to load)
 from .gnmi_connection import GNMI_AVAILABLE  # noqa: E402
 
-_gnmi_allowed = (_enabled is None or "gnmi" in _enabled) and not _progressive
+_gnmi_allowed = (_enabled is None or "gnmi" in _enabled) and not _progressive and _vendor_enabled("eos")
 if GNMI_AVAILABLE and _gnmi_allowed:
     _load_module("gnmi", ".tools.gnmi")
 elif not GNMI_AVAILABLE:
     logger.info("gNMI tools not available (install with: pip install latticio[gnmi])")
 elif _progressive:
     logger.info("gNMI tools deferred (progressive discovery enabled — use eos_load_tool_category('gnmi'))")
+elif not _vendor_enabled("eos"):
+    logger.info("gNMI tools not loaded (eos not in NET_VENDORS)")
 elif not _gnmi_allowed:
     logger.info("gNMI tools not loaded (not in NET_ENABLED_MODULES)")
 
-# CloudVision tools — loaded only when CVP URL is configured
-_cvp_allowed = (_enabled is None or "cloudvision" in _enabled) and not _progressive
+# CloudVision tools — loaded only when CVP URL is configured and eos vendor is enabled
+_cvp_allowed = (_enabled is None or "cloudvision" in _enabled) and not _progressive and _vendor_enabled("eos")
 if settings.eos_cvp_url and _cvp_allowed:
     _load_module("cloudvision", ".tools.cloudvision")
 elif not settings.eos_cvp_url:
     logger.info("CloudVision tools not available (set EOS_CVP_URL to enable)")
+elif not _vendor_enabled("eos"):
+    logger.info("CloudVision tools not loaded (eos not in NET_VENDORS)")
 elif _progressive:
     logger.info("CloudVision tools deferred (progressive discovery enabled)")
 elif not _cvp_allowed:
@@ -658,28 +711,33 @@ else:
 if settings.api_key_enabled:
     _load_module("admin", ".tools.admin")
 
-# Cisco-specific tools — loaded only when httpx is installed (cisco extra)
+# Cisco-specific tools — loaded only when httpx is installed (cisco extra) and
+# at least one Cisco platform (iosxe or nxos) is included in NET_VENDORS.
 # Not affected by progressive discovery or module filtering since they are
 # vendor-specific tools, not EOS core/optional modules.
-try:
-    import httpx  # noqa: F401
-
-    _load_module("cisco.vpc", "network_mcp.tools.cisco.vpc")
-    _load_module("cisco.fex", "network_mcp.tools.cisco.fex")
-    _load_module("cisco.iosxe", "network_mcp.tools.cisco.iosxe")
-    _load_module("cisco.nxos", "network_mcp.tools.cisco.nxos")
-except ImportError:
+_cisco_vendor_enabled = _vendor_enabled("iosxe") or _vendor_enabled("nxos")
+if _HTTPX_AVAILABLE and _cisco_vendor_enabled:
+    if _vendor_enabled("iosxe"):
+        _load_module("cisco.iosxe", "network_mcp.tools.cisco.iosxe")
+    if _vendor_enabled("nxos"):
+        _load_module("cisco.vpc", "network_mcp.tools.cisco.vpc")
+        _load_module("cisco.fex", "network_mcp.tools.cisco.fex")
+        _load_module("cisco.nxos", "network_mcp.tools.cisco.nxos")
+elif not _HTTPX_AVAILABLE:
     logger.info("Cisco tools not loaded (install with: pip install latticio[cisco])")
+elif not _cisco_vendor_enabled:
+    logger.info("Cisco tools not loaded (iosxe and nxos not in NET_VENDORS)")
 
 # Juniper-specific tools — loaded only when scrapli-netconf is installed (juniper extra)
+# and junos is included in NET_VENDORS.
 # Not affected by progressive discovery or module filtering since they are
 # vendor-specific tools, not EOS core/optional modules.
-try:
-    from scrapli_netconf.driver import NetconfDriver as _NetconfDriver  # noqa: F401
-
+if _SCRAPLI_NETCONF_AVAILABLE and _vendor_enabled("junos"):
     _load_module("juniper.junos", "network_mcp.tools.juniper.junos")
-except ImportError:
+elif not _SCRAPLI_NETCONF_AVAILABLE:
     logger.info("Juniper tools not loaded (install with: pip install latticio[juniper])")
+elif not _vendor_enabled("junos"):
+    logger.info("Juniper tools not loaded (junos not in NET_VENDORS)")
 
 # --- Plugin discovery (third-party drivers, compliance packs, tool modules) ---
 

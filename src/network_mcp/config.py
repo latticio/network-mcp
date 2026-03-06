@@ -428,6 +428,16 @@ class NetworkSettings(PlatformSettings):
         description="When True, only meta-tools + workflow tools at startup",
     )
 
+    # Selective vendor loading
+    net_vendors: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("NET_VENDORS"),
+        description=(
+            "Comma-separated vendor platforms to load tools for (eos, iosxe, nxos, junos). "
+            "Default: all platforms whose dependencies are installed."
+        ),
+    )
+
     # Config retry (disabled by default to prevent double-apply risk)
     config_retry_enabled: bool = Field(
         default=False, description="Enable retry for config commands (risk: double-apply)"
@@ -685,10 +695,11 @@ class NetworkSettings(PlatformSettings):
     _KNOWN_OPTIONAL_MODULES: ClassVar[frozenset[str]] = frozenset(
         {"evpn_vxlan", "security", "vrf", "bfd", "event_monitor", "qos", "compliance"}
     )
+    _KNOWN_VENDORS: ClassVar[frozenset[str]] = frozenset({"eos", "iosxe", "nxos", "junos"})
 
     @model_validator(mode="after")
     def _validate_module_names(self) -> "NetworkSettings":
-        """Validate that disabled/enabled module names are recognized."""
+        """Validate that disabled/enabled module names and vendor names are recognized."""
         for name in self.disabled_modules:
             if name not in self._KNOWN_OPTIONAL_MODULES:
                 raise ValueError(
@@ -701,6 +712,12 @@ class NetworkSettings(PlatformSettings):
                         f"Unknown module in NET_ENABLED_MODULES: {name!r}. "
                         f"Valid: {sorted(self._KNOWN_OPTIONAL_MODULES)}"
                     )
+        if self.enabled_vendors is not None:
+            for vendor in self.enabled_vendors:
+                if vendor not in self._KNOWN_VENDORS:
+                    raise ValueError(
+                        f"Unknown vendor in NET_VENDORS: {vendor!r}. Valid: {sorted(self._KNOWN_VENDORS)}"
+                    )
         return self
 
     @property
@@ -709,6 +726,17 @@ class NetworkSettings(PlatformSettings):
         if self.net_enabled_modules is None:
             return None
         return {m.strip() for m in self.net_enabled_modules.split(",") if m.strip()}
+
+    @property
+    def enabled_vendors(self) -> set[str] | None:
+        """Parse NET_VENDORS into a set of vendor names, or None if not set (meaning all vendors).
+
+        Returns None when NET_VENDORS is unset, which means all installed vendor tools should load.
+        Returns a set of lowercase vendor strings when NET_VENDORS is specified.
+        """
+        if self.net_vendors is None:
+            return None
+        return {v.strip().lower() for v in self.net_vendors.split(",") if v.strip()}
 
     @property
     def feature_flags(self) -> dict[str, FeatureFlag]:
