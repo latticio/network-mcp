@@ -187,6 +187,8 @@ def make_error_response(
     **extra,
 ) -> dict:
     """Build a standardized error response dict with error code metadata."""
+    from network_mcp.hints import get_hint
+
     meta = ERROR_METADATA[error_code]
     result = {
         "status": "error",
@@ -198,6 +200,9 @@ def make_error_response(
     }
     if meta["retry_after_seconds"] is not None:
         result["retry_after_seconds"] = meta["retry_after_seconds"]
+    hint = get_hint(error_code.value, error)
+    if hint:
+        result["hint"] = hint
     result.update(extra)
     return result
 
