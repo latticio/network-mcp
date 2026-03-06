@@ -645,10 +645,10 @@ if GNMI_AVAILABLE and _gnmi_allowed:
     _load_module("gnmi", ".tools.gnmi")
 elif not GNMI_AVAILABLE:
     logger.info("gNMI tools not available (install with: pip install latticio[gnmi])")
-elif _progressive:
-    logger.info("gNMI tools deferred (progressive discovery enabled — use eos_load_tool_category('gnmi'))")
 elif not _vendor_enabled("eos"):
     logger.info("gNMI tools not loaded (eos not in NET_VENDORS)")
+elif _progressive:
+    logger.info("gNMI tools deferred (progressive discovery enabled — use eos_load_tool_category('gnmi'))")
 elif not _gnmi_allowed:
     logger.info("gNMI tools not loaded (not in NET_ENABLED_MODULES)")
 
