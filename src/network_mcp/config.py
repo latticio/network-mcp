@@ -660,6 +660,13 @@ class NetworkSettings(PlatformSettings):
         description="Version identifier included in signed audit entries for key rotation",
     )
 
+    # Containerlab lifecycle management (deploy/destroy/status)
+    net_containerlab_enabled: bool = Field(
+        default=False,
+        validation_alias=AliasChoices("NET_CONTAINERLAB_ENABLED"),
+        description="Enable Containerlab lifecycle management tools (deploy, destroy, status)",
+    )
+
     # HashiCorp Vault integration settings
     vault_enabled: bool = Field(default=False, alias="VAULT_ENABLED")
     vault_addr: str | None = Field(default=None, alias="VAULT_ADDR")

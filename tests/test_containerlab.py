@@ -17,9 +17,14 @@ from network_mcp.integrations.containerlab import (
     _extract_ip,
     _normalise_inspect_output,
     _parse_node_name,
+    _run_deploy,
+    _run_destroy,
     _run_inspect,
+    net_containerlab_deploy,
+    net_containerlab_destroy,
     net_containerlab_discover,
     net_containerlab_inventory,
+    net_containerlab_status,
 )
 
 # ---------------------------------------------------------------------------
@@ -679,3 +684,347 @@ class TestNetContainerlabInventory:
         assert platform_map["junos1"] == "junos"
         assert platform_map["nxos1"] == "nxos"
         assert platform_map["csr1"] == "iosxe"
+
+
+# ---------------------------------------------------------------------------
+# _run_deploy
+# ---------------------------------------------------------------------------
+
+
+class TestRunDeploy:
+    def test_basic_deploy(self):
+        proc = _make_proc("Deployed lab successfully.")
+        with patch("network_mcp.integrations.containerlab.subprocess.run", return_value=proc) as mock_run:
+            result = _run_deploy("topology.yaml")
+        assert result.returncode == 0
+        cmd = mock_run.call_args[0][0]
+        assert "containerlab" in cmd
+        assert "deploy" in cmd
+        assert "-t" in cmd
+        assert "topology.yaml" in cmd
+        assert "--reconfigure" not in cmd
+
+    def test_reconfigure_flag(self):
+        proc = _make_proc("Deployed lab successfully.")
+        with patch("network_mcp.integrations.containerlab.subprocess.run", return_value=proc) as mock_run:
+            _run_deploy("topology.yaml", reconfigure=True)
+        cmd = mock_run.call_args[0][0]
+        assert "--reconfigure" in cmd
+
+    def test_cli_not_found_raises(self):
+        with patch(
+            "network_mcp.integrations.containerlab.subprocess.run",
+            side_effect=FileNotFoundError("no such file"),
+        ):
+            with pytest.raises(RuntimeError, match="containerlab CLI not found"):
+                _run_deploy("topology.yaml")
+
+    def test_timeout_raises(self):
+        with patch(
+            "network_mcp.integrations.containerlab.subprocess.run",
+            side_effect=subprocess.TimeoutExpired(cmd="containerlab", timeout=300),
+        ):
+            with pytest.raises(RuntimeError, match="timed out"):
+                _run_deploy("topology.yaml")
+
+
+# ---------------------------------------------------------------------------
+# _run_destroy
+# ---------------------------------------------------------------------------
+
+
+class TestRunDestroy:
+    def test_basic_destroy(self):
+        proc = _make_proc("Destroyed lab mylab.")
+        with patch("network_mcp.integrations.containerlab.subprocess.run", return_value=proc) as mock_run:
+            result = _run_destroy("mylab")
+        assert result.returncode == 0
+        cmd = mock_run.call_args[0][0]
+        assert "containerlab" in cmd
+        assert "destroy" in cmd
+        assert "--name" in cmd
+        assert "mylab" in cmd
+        assert "--cleanup" not in cmd
+
+    def test_cleanup_flag(self):
+        proc = _make_proc("Destroyed lab mylab.")
+        with patch("network_mcp.integrations.containerlab.subprocess.run", return_value=proc) as mock_run:
+            _run_destroy("mylab", cleanup=True)
+        cmd = mock_run.call_args[0][0]
+        assert "--cleanup" in cmd
+
+    def test_cli_not_found_raises(self):
+        with patch(
+            "network_mcp.integrations.containerlab.subprocess.run",
+            side_effect=FileNotFoundError("no such file"),
+        ):
+            with pytest.raises(RuntimeError, match="containerlab CLI not found"):
+                _run_destroy("mylab")
+
+    def test_timeout_raises(self):
+        with patch(
+            "network_mcp.integrations.containerlab.subprocess.run",
+            side_effect=subprocess.TimeoutExpired(cmd="containerlab", timeout=120),
+        ):
+            with pytest.raises(RuntimeError, match="timed out"):
+                _run_destroy("mylab")
+
+
+# ---------------------------------------------------------------------------
+# net_containerlab_deploy
+# ---------------------------------------------------------------------------
+
+
+class TestNetContainerlabDeploy:
+    def _enabled_settings(self):
+        """Return a mock settings object with containerlab enabled and read-only disabled."""
+        mock = MagicMock()
+        mock.net_containerlab_enabled = True
+        mock.net_demo_mode = False
+        mock.net_read_only = False
+        return mock
+
+    def test_feature_disabled_returns_error(self):
+        with patch("network_mcp.integrations.containerlab.settings") as mock_settings:
+            mock_settings.net_containerlab_enabled = False
+            result = net_containerlab_deploy("topology.yaml")
+        assert result["status"] == "error"
+        assert "NET_CONTAINERLAB_ENABLED" in result["error"]
+
+    def test_read_only_returns_error(self):
+        with patch("network_mcp.integrations.containerlab.settings") as mock_settings:
+            mock_settings.net_containerlab_enabled = True
+            mock_settings.net_demo_mode = False
+            with patch("network_mcp.integrations.containerlab.check_read_only", return_value="Write operations are disabled."):
+                result = net_containerlab_deploy("topology.yaml")
+        assert result["status"] == "error"
+        assert result["topology_file"] == "topology.yaml"
+        assert "Write operations are disabled" in result["error"]
+
+    def test_success(self):
+        proc = _make_proc("Deployed lab.")
+        with patch("network_mcp.integrations.containerlab.settings") as mock_settings:
+            mock_settings.net_containerlab_enabled = True
+            mock_settings.net_demo_mode = False
+            with patch("network_mcp.integrations.containerlab.check_read_only", return_value=None):
+                with patch("network_mcp.integrations.containerlab.subprocess.run", return_value=proc):
+                    result = net_containerlab_deploy("topology.yaml")
+        assert result["status"] == "success"
+        assert result["topology_file"] == "topology.yaml"
+        assert result["reconfigure"] is False
+        assert "Deployed lab." in result["output"]
+
+    def test_reconfigure_passed_through(self):
+        proc = _make_proc("Deployed lab.")
+        with patch("network_mcp.integrations.containerlab.settings") as mock_settings:
+            mock_settings.net_containerlab_enabled = True
+            mock_settings.net_demo_mode = False
+            with patch("network_mcp.integrations.containerlab.check_read_only", return_value=None):
+                with patch("network_mcp.integrations.containerlab.subprocess.run", return_value=proc) as mock_run:
+                    result = net_containerlab_deploy("topology.yaml", reconfigure=True)
+        assert result["status"] == "success"
+        assert result["reconfigure"] is True
+        cmd = mock_run.call_args[0][0]
+        assert "--reconfigure" in cmd
+
+    def test_non_zero_exit_returns_error(self):
+        proc = _make_proc("", returncode=1, stderr="topology file not found")
+        with patch("network_mcp.integrations.containerlab.settings") as mock_settings:
+            mock_settings.net_containerlab_enabled = True
+            mock_settings.net_demo_mode = False
+            with patch("network_mcp.integrations.containerlab.check_read_only", return_value=None):
+                with patch("network_mcp.integrations.containerlab.subprocess.run", return_value=proc):
+                    result = net_containerlab_deploy("bad-topology.yaml")
+        assert result["status"] == "error"
+        assert "topology file not found" in result["error"]
+
+    def test_cli_not_found_returns_error(self):
+        with patch("network_mcp.integrations.containerlab.settings") as mock_settings:
+            mock_settings.net_containerlab_enabled = True
+            mock_settings.net_demo_mode = False
+            with patch("network_mcp.integrations.containerlab.check_read_only", return_value=None):
+                with patch(
+                    "network_mcp.integrations.containerlab.subprocess.run",
+                    side_effect=FileNotFoundError(),
+                ):
+                    result = net_containerlab_deploy("topology.yaml")
+        assert result["status"] == "error"
+        assert "containerlab CLI not found" in result["error"]
+
+    def test_demo_mode_returns_mock_data(self):
+        with patch("network_mcp.integrations.containerlab.settings") as mock_settings:
+            mock_settings.net_containerlab_enabled = True
+            mock_settings.net_demo_mode = True
+            result = net_containerlab_deploy("topology.yaml")
+        assert result["status"] == "success"
+        assert result["topology_file"] == "topology.yaml"
+        assert "[demo]" in result["output"]
+
+
+# ---------------------------------------------------------------------------
+# net_containerlab_destroy
+# ---------------------------------------------------------------------------
+
+
+class TestNetContainerlabDestroy:
+    def test_feature_disabled_returns_error(self):
+        with patch("network_mcp.integrations.containerlab.settings") as mock_settings:
+            mock_settings.net_containerlab_enabled = False
+            result = net_containerlab_destroy("mylab")
+        assert result["status"] == "error"
+        assert "NET_CONTAINERLAB_ENABLED" in result["error"]
+
+    def test_read_only_returns_error(self):
+        with patch("network_mcp.integrations.containerlab.settings") as mock_settings:
+            mock_settings.net_containerlab_enabled = True
+            mock_settings.net_demo_mode = False
+            with patch("network_mcp.integrations.containerlab.check_read_only", return_value="Write operations are disabled."):
+                result = net_containerlab_destroy("mylab")
+        assert result["status"] == "error"
+        assert result["lab_name"] == "mylab"
+        assert "Write operations are disabled" in result["error"]
+
+    def test_success(self):
+        proc = _make_proc("Destroyed lab mylab.")
+        with patch("network_mcp.integrations.containerlab.settings") as mock_settings:
+            mock_settings.net_containerlab_enabled = True
+            mock_settings.net_demo_mode = False
+            with patch("network_mcp.integrations.containerlab.check_read_only", return_value=None):
+                with patch("network_mcp.integrations.containerlab.subprocess.run", return_value=proc):
+                    result = net_containerlab_destroy("mylab")
+        assert result["status"] == "success"
+        assert result["lab_name"] == "mylab"
+        assert result["cleanup"] is False
+        assert "Destroyed lab mylab." in result["output"]
+
+    def test_cleanup_passed_through(self):
+        proc = _make_proc("Destroyed lab mylab.")
+        with patch("network_mcp.integrations.containerlab.settings") as mock_settings:
+            mock_settings.net_containerlab_enabled = True
+            mock_settings.net_demo_mode = False
+            with patch("network_mcp.integrations.containerlab.check_read_only", return_value=None):
+                with patch("network_mcp.integrations.containerlab.subprocess.run", return_value=proc) as mock_run:
+                    result = net_containerlab_destroy("mylab", cleanup=True)
+        assert result["status"] == "success"
+        assert result["cleanup"] is True
+        cmd = mock_run.call_args[0][0]
+        assert "--cleanup" in cmd
+
+    def test_non_zero_exit_returns_error(self):
+        proc = _make_proc("", returncode=1, stderr="lab not found")
+        with patch("network_mcp.integrations.containerlab.settings") as mock_settings:
+            mock_settings.net_containerlab_enabled = True
+            mock_settings.net_demo_mode = False
+            with patch("network_mcp.integrations.containerlab.check_read_only", return_value=None):
+                with patch("network_mcp.integrations.containerlab.subprocess.run", return_value=proc):
+                    result = net_containerlab_destroy("missing-lab")
+        assert result["status"] == "error"
+        assert "lab not found" in result["error"]
+
+    def test_cli_not_found_returns_error(self):
+        with patch("network_mcp.integrations.containerlab.settings") as mock_settings:
+            mock_settings.net_containerlab_enabled = True
+            mock_settings.net_demo_mode = False
+            with patch("network_mcp.integrations.containerlab.check_read_only", return_value=None):
+                with patch(
+                    "network_mcp.integrations.containerlab.subprocess.run",
+                    side_effect=FileNotFoundError(),
+                ):
+                    result = net_containerlab_destroy("mylab")
+        assert result["status"] == "error"
+        assert "containerlab CLI not found" in result["error"]
+
+    def test_demo_mode_returns_mock_data(self):
+        with patch("network_mcp.integrations.containerlab.settings") as mock_settings:
+            mock_settings.net_containerlab_enabled = True
+            mock_settings.net_demo_mode = True
+            result = net_containerlab_destroy("my-demo-lab")
+        assert result["status"] == "success"
+        assert result["lab_name"] == "my-demo-lab"
+        assert "[demo]" in result["output"]
+
+
+# ---------------------------------------------------------------------------
+# net_containerlab_status
+# ---------------------------------------------------------------------------
+
+
+class TestNetContainerlabStatus:
+    def test_feature_disabled_returns_error(self):
+        with patch("network_mcp.integrations.containerlab.settings") as mock_settings:
+            mock_settings.net_containerlab_enabled = False
+            result = net_containerlab_status()
+        assert result["status"] == "error"
+        assert "NET_CONTAINERLAB_ENABLED" in result["error"]
+
+    def test_success_with_running_nodes(self):
+        stdout = json.dumps(_FLAT_CONTAINERS)
+        with patch("network_mcp.integrations.containerlab.settings") as mock_settings:
+            mock_settings.net_containerlab_enabled = True
+            mock_settings.net_demo_mode = False
+            with patch("network_mcp.integrations.containerlab.subprocess.run", return_value=_make_proc(stdout)):
+                result = net_containerlab_status()
+        assert result["status"] == "success"
+        assert result["lab_count"] == 1
+        assert result["total_nodes"] == 3
+        assert result["running_nodes"] == 3
+        assert "mylab" in result["labs"]
+        assert result["labs"]["mylab"]["running"] == 3
+
+    def test_mixed_states_counted_correctly(self):
+        stdout = json.dumps(_MIXED_LABS_CONTAINERS)
+        with patch("network_mcp.integrations.containerlab.settings") as mock_settings:
+            mock_settings.net_containerlab_enabled = True
+            mock_settings.net_demo_mode = False
+            with patch("network_mcp.integrations.containerlab.subprocess.run", return_value=_make_proc(stdout)):
+                result = net_containerlab_status()
+        assert result["status"] == "success"
+        # 3 total containers (including exited sw2), 2 running
+        assert result["total_nodes"] == 3
+        assert result["running_nodes"] == 2
+        assert result["labs"]["lab-b"]["node_count"] == 2
+        assert result["labs"]["lab-b"]["running"] == 1
+
+    def test_node_entries_have_state_field(self):
+        stdout = json.dumps(_FLAT_CONTAINERS[:1])
+        with patch("network_mcp.integrations.containerlab.settings") as mock_settings:
+            mock_settings.net_containerlab_enabled = True
+            mock_settings.net_demo_mode = False
+            with patch("network_mcp.integrations.containerlab.subprocess.run", return_value=_make_proc(stdout)):
+                result = net_containerlab_status()
+        node = result["labs"]["mylab"]["nodes"][0]
+        assert "state" in node
+        assert node["state"] == "running"
+
+    def test_empty_output_returns_empty(self):
+        with patch("network_mcp.integrations.containerlab.settings") as mock_settings:
+            mock_settings.net_containerlab_enabled = True
+            mock_settings.net_demo_mode = False
+            with patch("network_mcp.integrations.containerlab.subprocess.run", return_value=_make_proc("[]")):
+                result = net_containerlab_status()
+        assert result["status"] == "success"
+        assert result["lab_count"] == 0
+        assert result["total_nodes"] == 0
+        assert result["running_nodes"] == 0
+
+    def test_cli_not_found_returns_error(self):
+        with patch("network_mcp.integrations.containerlab.settings") as mock_settings:
+            mock_settings.net_containerlab_enabled = True
+            mock_settings.net_demo_mode = False
+            with patch(
+                "network_mcp.integrations.containerlab.subprocess.run",
+                side_effect=FileNotFoundError(),
+            ):
+                result = net_containerlab_status()
+        assert result["status"] == "error"
+        assert "containerlab CLI not found" in result["error"]
+
+    def test_demo_mode_returns_mock_data(self):
+        with patch("network_mcp.integrations.containerlab.settings") as mock_settings:
+            mock_settings.net_containerlab_enabled = True
+            mock_settings.net_demo_mode = True
+            result = net_containerlab_status()
+        assert result["status"] == "success"
+        assert result["lab_count"] == 1
+        assert "demo-lab" in result["labs"]
+        assert result["labs"]["demo-lab"]["running"] == 2

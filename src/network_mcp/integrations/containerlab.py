@@ -18,7 +18,7 @@ from typing import Any
 from pydantic import SecretStr
 
 from network_mcp.connection import DeviceCredentials
-from network_mcp.helpers import READ_ONLY
+from network_mcp.helpers import READ_ONLY, WRITE_SAFE, check_read_only
 from network_mcp.server import conn_mgr, mcp, settings
 
 logger = logging.getLogger("network-mcp.containerlab")
@@ -431,4 +431,258 @@ def net_containerlab_inventory(
         "lab_name": lab_name,
         "imported_count": len(devices),
         "devices": device_list,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Lifecycle CLI helpers
+# ---------------------------------------------------------------------------
+
+_FEATURE_DISABLED_MSG = (
+    "Containerlab lifecycle tools are disabled. Set NET_CONTAINERLAB_ENABLED=true to enable."
+)
+
+
+def _run_deploy(topology_file: str, *, reconfigure: bool = False) -> subprocess.CompletedProcess:  # type: ignore[type-arg]
+    """Run ``containerlab deploy -t <topology_file>`` and return the CompletedProcess.
+
+    Args:
+        topology_file: Path to the Containerlab topology YAML file.
+        reconfigure: If True, pass ``--reconfigure`` to force re-creation of nodes.
+
+    Raises:
+        RuntimeError: If the containerlab binary is not found or the command times out.
+    """
+    cmd = ["containerlab", "deploy", "-t", topology_file]
+    if reconfigure:
+        cmd.append("--reconfigure")
+    try:
+        return subprocess.run(cmd, capture_output=True, text=True, timeout=300)  # noqa: S603
+    except FileNotFoundError as exc:
+        raise RuntimeError("containerlab CLI not found. Install from https://containerlab.dev") from exc
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError("containerlab deploy timed out after 300 seconds") from exc
+
+
+def _run_destroy(lab_name: str, *, cleanup: bool = False) -> subprocess.CompletedProcess:  # type: ignore[type-arg]
+    """Run ``containerlab destroy --name <lab_name>`` and return the CompletedProcess.
+
+    Args:
+        lab_name: Name of the lab to destroy.
+        cleanup: If True, pass ``--cleanup`` to remove container images and volumes.
+
+    Raises:
+        RuntimeError: If the containerlab binary is not found or the command times out.
+    """
+    cmd = ["containerlab", "destroy", "--name", lab_name]
+    if cleanup:
+        cmd.append("--cleanup")
+    try:
+        return subprocess.run(cmd, capture_output=True, text=True, timeout=120)  # noqa: S603
+    except FileNotFoundError as exc:
+        raise RuntimeError("containerlab CLI not found. Install from https://containerlab.dev") from exc
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError("containerlab destroy timed out after 120 seconds") from exc
+
+
+# ---------------------------------------------------------------------------
+# Lifecycle MCP tools
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool(annotations=WRITE_SAFE)
+def net_containerlab_deploy(
+    topology_file: str,
+    reconfigure: bool = False,
+) -> dict[str, Any]:
+    """[WRITE] Deploy a Containerlab topology from a YAML topology file.
+
+    Runs ``containerlab deploy -t <topology_file>`` to start all nodes defined
+    in the topology.  Optionally passes ``--reconfigure`` to force re-creation
+    of existing nodes.
+
+    Requires ``NET_CONTAINERLAB_ENABLED=true`` and ``NET_READ_ONLY=false``.
+
+    Args:
+        topology_file: Path to the Containerlab topology YAML file (e.g. ``"./topologies/lab.yaml"``).
+        reconfigure: If True, force re-creation of all nodes even if they already exist.
+    """
+    if not settings.net_containerlab_enabled:
+        return {"status": "error", "error": _FEATURE_DISABLED_MSG}
+
+    if settings.net_demo_mode:
+        return {
+            "status": "success",
+            "topology_file": topology_file,
+            "reconfigure": reconfigure,
+            "output": "[demo] containerlab deploy completed successfully.",
+        }
+
+    ro_err = check_read_only()
+    if ro_err:
+        return {"status": "error", "topology_file": topology_file, "error": ro_err}
+
+    try:
+        result = _run_deploy(topology_file, reconfigure=reconfigure)
+    except RuntimeError as exc:
+        return {"status": "error", "topology_file": topology_file, "error": str(exc)}
+
+    if result.returncode != 0:
+        stderr = result.stderr.strip()
+        return {
+            "status": "error",
+            "topology_file": topology_file,
+            "error": f"containerlab deploy failed (exit {result.returncode}): {stderr}",
+        }
+
+    logger.info("Containerlab deploy succeeded for topology '%s'", topology_file)
+    return {
+        "status": "success",
+        "topology_file": topology_file,
+        "reconfigure": reconfigure,
+        "output": result.stdout.strip(),
+    }
+
+
+@mcp.tool(annotations=WRITE_SAFE)
+def net_containerlab_destroy(
+    lab_name: str,
+    cleanup: bool = False,
+) -> dict[str, Any]:
+    """[WRITE] Tear down a running Containerlab topology.
+
+    Runs ``containerlab destroy --name <lab_name>`` to stop and remove all
+    containers belonging to the named lab.  Optionally passes ``--cleanup``
+    to also remove associated container images and volumes.
+
+    Requires ``NET_CONTAINERLAB_ENABLED=true`` and ``NET_READ_ONLY=false``.
+
+    Args:
+        lab_name: Name of the Containerlab lab to destroy (e.g. ``"mylab"``).
+        cleanup: If True, also remove container images and volumes after destroying.
+    """
+    if not settings.net_containerlab_enabled:
+        return {"status": "error", "error": _FEATURE_DISABLED_MSG}
+
+    if settings.net_demo_mode:
+        return {
+            "status": "success",
+            "lab_name": lab_name,
+            "cleanup": cleanup,
+            "output": f"[demo] containerlab destroy '{lab_name}' completed successfully.",
+        }
+
+    ro_err = check_read_only()
+    if ro_err:
+        return {"status": "error", "lab_name": lab_name, "error": ro_err}
+
+    try:
+        result = _run_destroy(lab_name, cleanup=cleanup)
+    except RuntimeError as exc:
+        return {"status": "error", "lab_name": lab_name, "error": str(exc)}
+
+    if result.returncode != 0:
+        stderr = result.stderr.strip()
+        return {
+            "status": "error",
+            "lab_name": lab_name,
+            "error": f"containerlab destroy failed (exit {result.returncode}): {stderr}",
+        }
+
+    logger.info("Containerlab destroy succeeded for lab '%s'", lab_name)
+    return {
+        "status": "success",
+        "lab_name": lab_name,
+        "cleanup": cleanup,
+        "output": result.stdout.strip(),
+    }
+
+
+@mcp.tool(annotations=READ_ONLY)
+def net_containerlab_status() -> dict[str, Any]:
+    """Show the current lifecycle status of all Containerlab labs.
+
+    Runs ``containerlab inspect --all --format json`` and returns a summary of
+    all known labs including nodes in any state (running, exited, etc.).
+
+    Requires ``NET_CONTAINERLAB_ENABLED=true``.
+
+    Returns a dict with keys:
+    - ``status``: ``"success"`` or ``"error"``
+    - ``lab_count``: Number of distinct labs found
+    - ``total_nodes``: Total nodes across all labs (all states)
+    - ``running_nodes``: Nodes in ``"running"`` or ``"up"`` state
+    - ``labs``: Dict keyed by lab name; each value has ``node_count``, ``running``, and ``nodes``
+    """
+    if not settings.net_containerlab_enabled:
+        return {"status": "error", "error": _FEATURE_DISABLED_MSG}
+
+    if settings.net_demo_mode:
+        return {
+            "status": "success",
+            "lab_count": 1,
+            "total_nodes": 2,
+            "running_nodes": 2,
+            "labs": {
+                "demo-lab": {
+                    "node_count": 2,
+                    "running": 2,
+                    "nodes": [
+                        {"name": "leaf1", "state": "running", "platform": "eos", "ip": "172.20.20.2"},
+                        {"name": "leaf2", "state": "running", "platform": "eos", "ip": "172.20.20.3"},
+                    ],
+                }
+            },
+        }
+
+    try:
+        containers = _run_inspect()
+    except RuntimeError as exc:
+        return {"status": "error", "error": str(exc)}
+
+    if not containers:
+        return {"status": "success", "lab_count": 0, "total_nodes": 0, "running_nodes": 0, "labs": {}}
+
+    labs: dict[str, dict[str, Any]] = {}
+    total_running = 0
+
+    for container in containers:
+        lab = container.get("lab_name", "<unknown>")
+        container_name: str = container.get("name", "")
+        kind: str = container.get("kind", "")
+        image: str = container.get("image", "")
+        state: str = container.get("state", "unknown").lower()
+        raw_ip: str = container.get("ipv4_address") or container.get("mgmt_ipv4", "")
+        mgmt_ip = _extract_ip(raw_ip)
+
+        node_name = _parse_node_name(container_name, lab) if lab != "<unknown>" else container_name
+        platform = _detect_platform(kind) if kind else _detect_platform(image)
+        is_running = state in ("running", "up")
+
+        if lab not in labs:
+            labs[lab] = {"node_count": 0, "running": 0, "nodes": []}
+
+        labs[lab]["nodes"].append(
+            {
+                "name": node_name,
+                "container_name": container_name,
+                "state": state,
+                "platform": platform,
+                "ip": mgmt_ip,
+                "kind": kind,
+            }
+        )
+        labs[lab]["node_count"] += 1
+        if is_running:
+            labs[lab]["running"] += 1
+            total_running += 1
+
+    total_nodes = sum(lab_data["node_count"] for lab_data in labs.values())
+
+    return {
+        "status": "success",
+        "lab_count": len(labs),
+        "total_nodes": total_nodes,
+        "running_nodes": total_running,
+        "labs": labs,
     }
