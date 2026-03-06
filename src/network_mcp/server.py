@@ -583,7 +583,7 @@ _CORE_MODULES = [
     "vlans",
     "workflows",
 ]
-_OPTIONAL_MODULES = ["evpn_vxlan", "security", "vrf", "bfd", "event_monitor", "qos", "compliance"]
+_OPTIONAL_MODULES = ["evpn_vxlan", "security", "vrf", "bfd", "event_monitor", "qos", "compliance", "ai_fabric"]
 _ALL_MODULES = _CORE_MODULES + _OPTIONAL_MODULES
 
 _enabled = settings.enabled_modules
