@@ -282,12 +282,20 @@ def run_init_wizard() -> int:
 def main() -> None:
     """Entry point for the ``latticio`` CLI command.
 
-    Dispatches ``latticio init`` to the interactive onboarding wizard; all other
-    invocations are forwarded to the MCP server entry point (``network_mcp.server``).
+    Dispatches subcommands:
+    - ``latticio init`` — interactive onboarding wizard
+    - ``latticio playground`` / ``latticio repl`` — interactive tool REPL
+    - everything else — forwarded to the MCP server
     """
     args = sys.argv[1:]
     if args and args[0] == "init":
         sys.exit(run_init_wizard())
+
+    if args and args[0] in ("playground", "repl"):
+        from network_mcp.playground import main as _playground_main  # noqa: PLC0415
+
+        _playground_main()
+        return
 
     # Lazy import: avoids triggering heavy module-level server initialisation
     # when the user runs `latticio init`.
