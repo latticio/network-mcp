@@ -205,6 +205,122 @@ custom_tools = "network_mcp_tools_custom.tools:setup"
 
 The entry point value must resolve to a callable that accepts the `mcp` instance.
 
+## Plugin SDK
+
+network-mcp provides a Plugin SDK (`network_mcp.sdk`) with utilities for building and testing plugins without needing real network devices.
+
+### MockDriverFactory
+
+Creates mock NetworkDriver instances pre-loaded with configurable response data:
+
+```python
+from network_mcp.sdk import MockDriverFactory
+
+# Create a mock driver with custom show command responses
+driver = MockDriverFactory.create(
+    platform="eos",
+    host="spine-01",
+    responses={
+        "show version": {"modelName": "DCS-7050TX3-48C8", "version": "4.32.1F"},
+        "show vlan": {"vlans": {"100": {"name": "PROD", "status": "active"}}},
+    },
+)
+
+# Use it like a real driver
+result = driver.run_show(["show version"])
+assert result[0]["version"] == "4.32.1F"
+```
+
+You can also provide getter responses and config responses:
+
+```python
+driver = MockDriverFactory.create(
+    platform="iosxe",
+    vendor="cisco",
+    getter_responses={
+        "get_facts": {"hostname": "rtr-01", "model": "C9300-48T", "version": "17.9.1"},
+        "get_interfaces": {"GigabitEthernet1": {"is_up": True, "speed": 1000}},
+    },
+    config_responses={
+        "interface Ethernet1": [""],
+        "description uplink": [""],
+    },
+)
+
+facts = driver.get_facts()
+assert facts["hostname"] == "rtr-01"
+```
+
+### ToolTestHarness
+
+Wraps a tool function with a mock connection manager and provides assertion helpers:
+
+```python
+from network_mcp.sdk import MockDriverFactory, ToolTestHarness
+from network_mcp.helpers import READ_ONLY, run_show_command
+from network_mcp.server import conn_mgr
+
+
+def custom_get_version(host: str) -> dict:
+    """Get software version from a device."""
+    result = run_show_command(conn_mgr, host, ["show version"])
+    if result["status"] == "error":
+        return result
+    return {
+        "status": "success",
+        "device": host,
+        "data": {"version": result["data"][0].get("version", "unknown")},
+    }
+
+
+# Create mock driver and harness
+driver = MockDriverFactory.create(
+    responses={"show version": {"version": "4.32.1F"}},
+)
+harness = ToolTestHarness(custom_get_version, driver)
+
+# Call the tool — conn_mgr is automatically mocked
+result = harness.call("spine-01")
+
+# Use assertion helpers
+harness.assert_success(result)
+harness.assert_field(result, "data.version", "4.32.1F")
+harness.assert_field(result, "device", "spine-01")
+```
+
+The `assert_error` helper checks for error responses:
+
+```python
+harness.assert_error(result)                           # just check status
+harness.assert_error(result, error_contains="timeout") # check error message
+```
+
+### register_tools
+
+Plugins can register tools without importing `mcp` directly:
+
+```python
+from network_mcp.sdk import register_tools
+from network_mcp.helpers import READ_ONLY, run_show_command
+from network_mcp.server import conn_mgr
+
+
+def setup(mcp):
+    @mcp.tool(annotations=READ_ONLY)
+    def my_plugin_tool(host: str) -> dict:
+        """My custom plugin tool."""
+        result = run_show_command(conn_mgr, host, ["show version"])
+        if result["status"] == "error":
+            return result
+        return {"status": "success", "device": host, "data": result["data"][0]}
+
+
+# Register tools with the live MCP server
+register_tools(setup)
+```
+
+This is equivalent to importing `mcp` from `network_mcp.server` and calling `setup(mcp)` directly, but makes the plugin's intent clearer and keeps the import path stable.
+
 ## Testing Your Plugin
 
 ### Test with mock entry points
@@ -222,6 +338,31 @@ def test_my_driver_plugin():
     driver = SROSDriver()
     assert driver.platform == "sros"
     assert driver.vendor == "nokia"
+```
+
+### Test with the Plugin SDK
+
+```python
+from network_mcp.sdk import MockDriverFactory, ToolTestHarness
+
+
+def test_custom_tool_success():
+    """Test that the tool returns success with valid data."""
+    driver = MockDriverFactory.create(
+        responses={"show version": {"version": "4.32.1F", "uptime": 86400}},
+    )
+    harness = ToolTestHarness(custom_get_uptime, driver)
+    result = harness.call("spine-01")
+    harness.assert_success(result)
+    harness.assert_field(result, "data.uptime", 86400)
+
+
+def test_custom_tool_error():
+    """Test tool behavior when the device returns an error."""
+    driver = MockDriverFactory.create(responses={})
+    harness = ToolTestHarness(custom_get_uptime, driver)
+    result = harness.call("unreachable-device")
+    # Tool should handle missing data gracefully
 ```
 
 ### Test integration with network-mcp
