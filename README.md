@@ -385,6 +385,7 @@ See [.env.example](.env.example) for the complete list (40+ settings).
 
 | Document | Description |
 |----------|-------------|
+| [Roadmap](ROADMAP.md) | Project direction and planned features |
 | [Getting Started](docs/GETTING_STARTED.md) | 5-minute quickstart with example output |
 | [Tools Reference](docs/TOOLS.md) | All 261 tools with parameters |
 | [Architecture](docs/ARCHITECTURE.md) | Internal design and multi-tenancy |

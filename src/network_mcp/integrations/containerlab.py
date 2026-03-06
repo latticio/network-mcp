@@ -139,13 +139,15 @@ def _normalise_inspect_output(data: Any) -> list[dict[str, Any]]:
             if isinstance(lab_data, dict) and "containers" in lab_data:
                 for c in lab_data["containers"]:
                     if isinstance(c, dict):
-                        c.setdefault("lab_name", lab_key)
-                        containers.append(c)
+                        entry = dict(c)
+                        entry.setdefault("lab_name", lab_key)
+                        containers.append(entry)
             elif isinstance(lab_data, list):
                 for c in lab_data:
                     if isinstance(c, dict):
-                        c.setdefault("lab_name", lab_key)
-                        containers.append(c)
+                        entry = dict(c)
+                        entry.setdefault("lab_name", lab_key)
+                        containers.append(entry)
         return containers
 
     return []
@@ -196,15 +198,16 @@ class ContainerlabInventoryBackend:
         self,
         lab_name: str | None = None,
         default_username: str = "admin",
-        default_password: str = "admin",  # noqa: S107
+        default_password: SecretStr | str = "admin",  # noqa: S107
         default_transport: str = "https",
         default_port: int = 443,
     ) -> None:
         self._devices: dict[str, DeviceCredentials] = {}
         self._lab_name = lab_name
-        self._load(default_username, default_password, default_transport, default_port)
+        secret = default_password if isinstance(default_password, SecretStr) else SecretStr(default_password)
+        self._load(default_username, secret, default_transport, default_port)
 
-    def _load(self, username: str, password: str, transport: str, port: int) -> None:
+    def _load(self, username: str, password: SecretStr, transport: str, port: int) -> None:
         containers = _run_inspect(self._lab_name)
         seen_ips: dict[str, str] = {}
 
@@ -250,7 +253,7 @@ class ContainerlabInventoryBackend:
             self._devices[node_name] = DeviceCredentials(
                 host=mgmt_ip,
                 username=username,
-                password=SecretStr(password),
+                password=password,
                 transport=transport,
                 port=port,
                 platform=platform,
@@ -270,6 +273,72 @@ class ContainerlabInventoryBackend:
     def get_device(self, name: str) -> DeviceCredentials | None:
         """Return credentials for a single node by name, or None if not found."""
         return self._devices.get(name)
+
+
+# ---------------------------------------------------------------------------
+# Internal helpers
+# ---------------------------------------------------------------------------
+
+
+def _build_labs_summary(
+    containers: list[dict[str, Any]],
+    *,
+    running_only: bool = False,
+) -> tuple[dict[str, dict[str, Any]], int, int]:
+    """Build a labs summary dict from a flat list of container dicts.
+
+    Args:
+        containers: Flat list of container dicts as returned by ``_run_inspect``.
+        running_only: If True, skip containers not in ``running``/``up`` state.
+
+    Returns:
+        A 3-tuple of ``(labs, total_nodes, running_nodes)`` where ``labs`` is
+        keyed by lab name.  Each lab entry contains ``node_count``, ``running``,
+        and ``nodes``.  Each node entry contains ``name``, ``container_name``,
+        ``state``, ``platform``, ``ip``, ``kind``, and ``image``.
+    """
+    labs: dict[str, dict[str, Any]] = {}
+    total_nodes = 0
+    running_nodes = 0
+
+    for container in containers:
+        state: str = container.get("state", "unknown").lower()
+        is_running = state in ("running", "up")
+
+        if running_only and not is_running:
+            continue
+
+        lab = container.get("lab_name", "<unknown>")
+        container_name: str = container.get("name", "")
+        kind: str = container.get("kind", "")
+        image: str = container.get("image", "")
+        raw_ip: str = container.get("ipv4_address") or container.get("mgmt_ipv4", "")
+        mgmt_ip = _extract_ip(raw_ip)
+
+        node_name = _parse_node_name(container_name, lab) if lab != "<unknown>" else container_name
+        platform = _detect_platform(kind) if kind else _detect_platform(image)
+
+        if lab not in labs:
+            labs[lab] = {"node_count": 0, "running": 0, "nodes": []}
+
+        labs[lab]["nodes"].append(
+            {
+                "name": node_name,
+                "container_name": container_name,
+                "state": state,
+                "platform": platform,
+                "ip": mgmt_ip,
+                "kind": kind,
+                "image": image,
+            }
+        )
+        labs[lab]["node_count"] += 1
+        if is_running:
+            labs[lab]["running"] += 1
+            running_nodes += 1
+        total_nodes += 1
+
+    return labs, total_nodes, running_nodes
 
 
 # ---------------------------------------------------------------------------
@@ -317,39 +386,7 @@ def net_containerlab_discover() -> dict[str, Any]:
     if not containers:
         return {"status": "success", "lab_count": 0, "total_nodes": 0, "labs": {}}
 
-    labs: dict[str, dict[str, Any]] = {}
-    running_total = 0
-
-    for container in containers:
-        state = container.get("state", "").lower()
-        if state not in ("running", "up"):
-            continue
-
-        lab = container.get("lab_name", "<unknown>")
-        container_name: str = container.get("name", "")
-        kind: str = container.get("kind", "")
-        image: str = container.get("image", "")
-        raw_ip: str = container.get("ipv4_address") or container.get("mgmt_ipv4", "")
-        mgmt_ip = _extract_ip(raw_ip)
-
-        node_name = _parse_node_name(container_name, lab) if lab != "<unknown>" else container_name
-        platform = _detect_platform(kind) if kind else _detect_platform(image)
-
-        if lab not in labs:
-            labs[lab] = {"node_count": 0, "nodes": []}
-
-        labs[lab]["nodes"].append(
-            {
-                "name": node_name,
-                "container_name": container_name,
-                "platform": platform,
-                "ip": mgmt_ip,
-                "kind": kind,
-                "image": image,
-            }
-        )
-        labs[lab]["node_count"] += 1
-        running_total += 1
+    labs, running_total, _ = _build_labs_summary(containers, running_only=True)
 
     return {
         "status": "success",
@@ -359,7 +396,7 @@ def net_containerlab_discover() -> dict[str, Any]:
     }
 
 
-@mcp.tool(annotations=READ_ONLY)
+@mcp.tool(annotations=WRITE_SAFE)
 def net_containerlab_inventory(
     lab_name: str,
     username: str = "admin",
@@ -367,7 +404,7 @@ def net_containerlab_inventory(
     transport: str = "https",
     port: int = 443,
 ) -> dict[str, Any]:
-    """Import devices from a running Containerlab lab into the active inventory.
+    """[WRITE] Import devices from a running Containerlab lab into the active inventory.
 
     Discovers all running nodes in the named lab via ``containerlab inspect``,
     maps each node to a ``DeviceCredentials`` entry (auto-detecting platform
@@ -376,6 +413,8 @@ def net_containerlab_inventory(
 
     After calling this tool, all imported node names become valid ``host``
     arguments for every other network-mcp tool.
+
+    Requires ``NET_READ_ONLY=false``.
 
     Args:
         lab_name: Name of the Containerlab lab to import (e.g. ``"mylab"``).
@@ -394,6 +433,10 @@ def net_containerlab_inventory(
                 {"name": "leaf2", "host": "172.20.20.3", "platform": "eos"},
             ],
         }
+
+    ro_err = check_read_only()
+    if ro_err:
+        return {"status": "error", "lab_name": lab_name, "error": ro_err}
 
     try:
         backend = ContainerlabInventoryBackend(
@@ -643,41 +686,7 @@ def net_containerlab_status() -> dict[str, Any]:
     if not containers:
         return {"status": "success", "lab_count": 0, "total_nodes": 0, "running_nodes": 0, "labs": {}}
 
-    labs: dict[str, dict[str, Any]] = {}
-    total_running = 0
-
-    for container in containers:
-        lab = container.get("lab_name", "<unknown>")
-        container_name: str = container.get("name", "")
-        kind: str = container.get("kind", "")
-        image: str = container.get("image", "")
-        state: str = container.get("state", "unknown").lower()
-        raw_ip: str = container.get("ipv4_address") or container.get("mgmt_ipv4", "")
-        mgmt_ip = _extract_ip(raw_ip)
-
-        node_name = _parse_node_name(container_name, lab) if lab != "<unknown>" else container_name
-        platform = _detect_platform(kind) if kind else _detect_platform(image)
-        is_running = state in ("running", "up")
-
-        if lab not in labs:
-            labs[lab] = {"node_count": 0, "running": 0, "nodes": []}
-
-        labs[lab]["nodes"].append(
-            {
-                "name": node_name,
-                "container_name": container_name,
-                "state": state,
-                "platform": platform,
-                "ip": mgmt_ip,
-                "kind": kind,
-            }
-        )
-        labs[lab]["node_count"] += 1
-        if is_running:
-            labs[lab]["running"] += 1
-            total_running += 1
-
-    total_nodes = sum(lab_data["node_count"] for lab_data in labs.values())
+    labs, total_nodes, total_running = _build_labs_summary(containers)
 
     return {
         "status": "success",

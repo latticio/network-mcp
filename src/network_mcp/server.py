@@ -648,6 +648,12 @@ elif not _snow_allowed:
 # Ansible integration tools — no external deps required (stdlib yaml only)
 _load_module("ansible", ".integrations.ansible")
 
+# Containerlab integration tools — loaded only when NET_CONTAINERLAB_ENABLED=true
+if settings.net_containerlab_enabled:
+    _load_module("containerlab", ".integrations.containerlab")
+else:
+    logger.info("Containerlab tools not loaded (set NET_CONTAINERLAB_ENABLED=true to enable)")
+
 # API key admin tools — loaded only when NET_API_KEY_ENABLED=true
 if settings.api_key_enabled:
     _load_module("admin", ".tools.admin")

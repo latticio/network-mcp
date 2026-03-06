@@ -555,10 +555,11 @@ class TestNetContainerlabDiscover:
 class TestNetContainerlabInventory:
     def _run_with_mock(self, containers: list[dict], lab_name: str = "mylab") -> dict:
         stdout = json.dumps(containers)
-        with patch("network_mcp.integrations.containerlab.subprocess.run", return_value=_make_proc(stdout)):
-            with patch("network_mcp.integrations.containerlab.conn_mgr") as mock_cm:
-                result = net_containerlab_inventory(lab_name)
-                self._mock_cm = mock_cm
+        with patch("network_mcp.integrations.containerlab.check_read_only", return_value=None):
+            with patch("network_mcp.integrations.containerlab.subprocess.run", return_value=_make_proc(stdout)):
+                with patch("network_mcp.integrations.containerlab.conn_mgr") as mock_cm:
+                    result = net_containerlab_inventory(lab_name)
+                    self._mock_cm = mock_cm
         return result
 
     def test_success_returns_device_list(self):
@@ -579,10 +580,11 @@ class TestNetContainerlabInventory:
 
     def test_inventory_loaded_into_conn_mgr(self):
         stdout = json.dumps(_FLAT_CONTAINERS)
-        with patch("network_mcp.integrations.containerlab.subprocess.run", return_value=_make_proc(stdout)):
-            with patch("network_mcp.integrations.containerlab.conn_mgr") as mock_cm:
-                net_containerlab_inventory("mylab")
-                mock_cm.load_inventory_from_backend.assert_called_once()
+        with patch("network_mcp.integrations.containerlab.check_read_only", return_value=None):
+            with patch("network_mcp.integrations.containerlab.subprocess.run", return_value=_make_proc(stdout)):
+                with patch("network_mcp.integrations.containerlab.conn_mgr") as mock_cm:
+                    net_containerlab_inventory("mylab")
+                    mock_cm.load_inventory_from_backend.assert_called_once()
 
     def test_empty_lab_returns_error(self):
         result = self._run_with_mock([])
@@ -592,11 +594,12 @@ class TestNetContainerlabInventory:
         assert "No running nodes" in result["error"]
 
     def test_cli_not_found_returns_error(self):
-        with patch(
-            "network_mcp.integrations.containerlab.subprocess.run",
-            side_effect=FileNotFoundError(),
-        ):
-            result = net_containerlab_inventory("mylab")
+        with patch("network_mcp.integrations.containerlab.check_read_only", return_value=None):
+            with patch(
+                "network_mcp.integrations.containerlab.subprocess.run",
+                side_effect=FileNotFoundError(),
+            ):
+                result = net_containerlab_inventory("mylab")
 
         assert result["status"] == "error"
         assert result["lab_name"] == "mylab"
@@ -625,10 +628,11 @@ class TestNetContainerlabInventory:
             nonlocal captured_backend
             captured_backend = backend
 
-        with patch("network_mcp.integrations.containerlab.subprocess.run", return_value=_make_proc(stdout)):
-            with patch("network_mcp.integrations.containerlab.conn_mgr") as mock_cm:
-                mock_cm.load_inventory_from_backend.side_effect = capture_backend
-                net_containerlab_inventory("mylab", username="netops", password="secret", transport="http", port=80)
+        with patch("network_mcp.integrations.containerlab.check_read_only", return_value=None):
+            with patch("network_mcp.integrations.containerlab.subprocess.run", return_value=_make_proc(stdout)):
+                with patch("network_mcp.integrations.containerlab.conn_mgr") as mock_cm:
+                    mock_cm.load_inventory_from_backend.side_effect = capture_backend
+                    net_containerlab_inventory("mylab", username="netops", password="secret", transport="http", port=80)
 
         assert captured_backend is not None
         devices = captured_backend.get_devices()
@@ -674,9 +678,10 @@ class TestNetContainerlabInventory:
             },
         ]
         stdout = json.dumps(containers)
-        with patch("network_mcp.integrations.containerlab.subprocess.run", return_value=_make_proc(stdout)):
-            with patch("network_mcp.integrations.containerlab.conn_mgr"):
-                result = net_containerlab_inventory("mixed")
+        with patch("network_mcp.integrations.containerlab.check_read_only", return_value=None):
+            with patch("network_mcp.integrations.containerlab.subprocess.run", return_value=_make_proc(stdout)):
+                with patch("network_mcp.integrations.containerlab.conn_mgr"):
+                    result = net_containerlab_inventory("mixed")
 
         assert result["status"] == "success"
         platform_map = {d["name"]: d["platform"] for d in result["devices"]}
@@ -776,14 +781,6 @@ class TestRunDestroy:
 
 
 class TestNetContainerlabDeploy:
-    def _enabled_settings(self):
-        """Return a mock settings object with containerlab enabled and read-only disabled."""
-        mock = MagicMock()
-        mock.net_containerlab_enabled = True
-        mock.net_demo_mode = False
-        mock.net_read_only = False
-        return mock
-
     def test_feature_disabled_returns_error(self):
         with patch("network_mcp.integrations.containerlab.settings") as mock_settings:
             mock_settings.net_containerlab_enabled = False
