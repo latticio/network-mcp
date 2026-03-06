@@ -35,6 +35,7 @@ class Platform(StrEnum):
     IOSXE = "iosxe"
     NXOS = "nxos"
     JUNOS = "junos"
+    SONIC = "sonic"
 
 
 class PlatformSettings(BaseSettings):

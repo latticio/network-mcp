@@ -47,4 +47,12 @@ try:
 except ImportError:
     logger.debug("JunOS driver not available (install 'juniper' extra for scrapli-netconf support)")
 
+# Conditionally register SONiC driver when httpx is available (sonic extra)
+try:
+    from network_mcp.drivers.sonic import SonicDriver
+
+    DRIVER_REGISTRY["sonic"] = SonicDriver  # type: ignore[assignment]
+except ImportError:
+    logger.debug("SONiC driver not available (install 'sonic' extra for httpx support)")
+
 __all__ = ["DRIVER_REGISTRY", "DeviceDriver", "EosDriver", "NetworkDriver", "NotSupportedError"]
