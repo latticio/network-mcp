@@ -1717,3 +1717,48 @@ def run_session_command(conn_mgr: "ConnectionManager", host: str, commands: list
         log_tool_invocation(action, host, {"commands": commands}, result, duration_ms)
         mc.record_tool_call("run_session_command", "error", duration_ms)
         return result
+
+
+# ---------------------------------------------------------------------------
+# Intent-based config command (template engine integration)
+# ---------------------------------------------------------------------------
+
+
+def run_intent_command(
+    conn_mgr: "ConnectionManager",
+    host: str,
+    intent: str,
+    params: dict,
+    platform: str,
+    idempotency_key: str | None = None,
+) -> dict:
+    """Render intent-based commands via the template engine, then execute via run_config_command.
+
+    This is a convenience wrapper that translates a high-level intent (e.g.
+    ``'create_vlan'``) into vendor-specific CLI commands using the template
+    engine, then delegates to ``run_config_command`` for execution.
+
+    Args:
+        conn_mgr: Connection manager instance.
+        host: Target device.
+        intent: Template intent name (e.g. 'create_vlan', 'set_interface_description').
+        params: Parameters for the intent template.
+        platform: Target platform ('eos', 'iosxe', 'nxos', 'junos').
+        idempotency_key: Optional idempotency key (forwarded to run_config_command).
+
+    Returns:
+        Dict with status, device, action, and data (includes rendered commands).
+    """
+    from network_mcp.templates import TemplateError, render_commands
+
+    try:
+        commands = render_commands(intent, params, platform)
+    except TemplateError as exc:
+        return _attach_request_id(make_error_response(ErrorCode.VALIDATION_ERROR, host, str(exc)))
+
+    result = run_config_command(conn_mgr, host, commands, intent, idempotency_key)
+    if result.get("status") == "success" and "data" in result:
+        result["data"]["rendered_commands"] = commands
+        result["data"]["intent"] = intent
+        result["data"]["platform"] = platform
+    return result
