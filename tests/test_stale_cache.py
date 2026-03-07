@@ -6,14 +6,23 @@ from unittest.mock import MagicMock, patch
 import pyeapi.eapilib
 import pytest
 
+import network_mcp.helpers as helpers_mod
 import network_mcp.server as server_mod
 from network_mcp.cache import CacheEntry, CommandCache
 from network_mcp.helpers import (
     circuit_breaker_registry,
-    command_cache,
     run_show_command,
 )
 from network_mcp.server import conn_mgr
+
+
+def _live_cache():
+    """Return the cache object currently in use by helpers.run_show_command.
+
+    After _init_settings() the module-level ``command_cache`` may have been
+    replaced.  This helper always returns the live reference.
+    """
+    return helpers_mod.command_cache
 
 
 @pytest.fixture(autouse=True)
@@ -143,15 +152,18 @@ class TestStaleIfErrorInRunShowCommand:
 
     def test_stale_cache_on_connection_error(self, mock_conn_mgr, mock_node):
         """Connection failure returns stale cache data instead of error."""
+        live = _live_cache()
+
         # First, populate the cache with a successful call
         mock_node.run_commands.return_value = [{"status": "success", "version": "4.32.1F"}]
         result = run_show_command(conn_mgr, "spine-01", ["show version"])
         assert result["status"] == "success"
 
-        # Expire the cache entry
-        key = command_cache._make_key("spine-01", ["show version"], "json")
-        command_cache._cache[key].timestamp = time.monotonic() - 100
-        command_cache._cache[key].ttl = 30
+        # Expire the cache entry on the LIVE cache object
+        key = live._make_key("spine-01", ["show version"], "json")
+        assert key in live._cache, "run_show_command should have populated the live cache"
+        live._cache[key].timestamp = time.monotonic() - 100
+        live._cache[key].ttl = 30
 
         # Now simulate connection failure
         mock_node.run_commands.side_effect = pyeapi.eapilib.ConnectionError("https", "Connection refused")
@@ -177,15 +189,18 @@ class TestStaleIfErrorInRunShowCommand:
 
     def test_stale_cache_on_circuit_breaker_open(self, mock_conn_mgr, mock_node):
         """Circuit breaker open returns stale cache data instead of error."""
+        live = _live_cache()
+
         # Populate cache
         mock_node.run_commands.return_value = [{"status": "success", "version": "4.32.1F"}]
         result = run_show_command(conn_mgr, "spine-01", ["show version"])
         assert result["status"] == "success"
 
-        # Expire the cache entry
-        key = command_cache._make_key("spine-01", ["show version"], "json")
-        command_cache._cache[key].timestamp = time.monotonic() - 100
-        command_cache._cache[key].ttl = 30
+        # Expire the cache entry on the LIVE cache object
+        key = live._make_key("spine-01", ["show version"], "json")
+        assert key in live._cache, "run_show_command should have populated the live cache"
+        live._cache[key].timestamp = time.monotonic() - 100
+        live._cache[key].ttl = 30
 
         # Open the circuit breaker
         circuit_breaker_registry._enabled = True
@@ -206,18 +221,18 @@ class TestStaleIfErrorInRunShowCommand:
 
     def test_stale_if_error_disabled_via_settings(self, mock_conn_mgr, mock_node):
         """When stale_if_error_ttl=0, connection errors return error, not stale data."""
-        # Clear cache to ensure clean state
-        command_cache.clear()
+        live = _live_cache()
+        live.clear()
 
         # Populate cache
         mock_node.run_commands.return_value = [{"status": "success", "version": "4.32.1F"}]
         run_show_command(conn_mgr, "spine-01", ["show version"])
 
-        # Expire entry
-        key = command_cache._make_key("spine-01", ["show version"], "json")
-        if key in command_cache._cache:
-            command_cache._cache[key].timestamp = time.monotonic() - 100
-            command_cache._cache[key].ttl = 30
+        # Expire entry on the LIVE cache object
+        key = live._make_key("spine-01", ["show version"], "json")
+        assert key in live._cache, "run_show_command should have populated the live cache"
+        live._cache[key].timestamp = time.monotonic() - 100
+        live._cache[key].ttl = 30
 
         # Now fail
         mock_node.run_commands.side_effect = pyeapi.eapilib.ConnectionError("https", "Connection refused")

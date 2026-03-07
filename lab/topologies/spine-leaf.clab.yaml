@@ -1,0 +1,69 @@
+# 3-tier spine-leaf lab: 2 spines + 4 leaves with BGP + VXLAN ready
+# Usage: sudo containerlab deploy -t lab/topologies/spine-leaf.clab.yaml
+#
+# Topology:
+#   spine1 ---- leaf1  (eth1-eth1)
+#   spine1 ---- leaf2  (eth2-eth1)
+#   spine1 ---- leaf3  (eth3-eth1)
+#   spine1 ---- leaf4  (eth4-eth1)
+#   spine2 ---- leaf1  (eth1-eth2)
+#   spine2 ---- leaf2  (eth2-eth2)
+#   spine2 ---- leaf3  (eth3-eth2)
+#   spine2 ---- leaf4  (eth4-eth2)
+#   leaf1  ---- leaf2  (eth3-eth3)  MLAG peer-link
+#   leaf3  ---- leaf4  (eth3-eth3)  MLAG peer-link
+#
+# Memory: ~8-10 GB total (cEOS ~1.5 GB per node)
+name: netmcp-fabric
+topology:
+  nodes:
+    spine1:
+      kind: ceos
+      image: ceos:latest
+      startup-config: ../configs/spine.cfg
+      env:
+        CEOS_CI: "true"
+    spine2:
+      kind: ceos
+      image: ceos:latest
+      startup-config: ../configs/spine.cfg
+      env:
+        CEOS_CI: "true"
+    leaf1:
+      kind: ceos
+      image: ceos:latest
+      startup-config: ../configs/leaf-bgp.cfg
+      env:
+        CEOS_CI: "true"
+    leaf2:
+      kind: ceos
+      image: ceos:latest
+      startup-config: ../configs/leaf-bgp.cfg
+      env:
+        CEOS_CI: "true"
+    leaf3:
+      kind: ceos
+      image: ceos:latest
+      startup-config: ../configs/leaf-bgp.cfg
+      env:
+        CEOS_CI: "true"
+    leaf4:
+      kind: ceos
+      image: ceos:latest
+      startup-config: ../configs/leaf-bgp.cfg
+      env:
+        CEOS_CI: "true"
+  links:
+    # Spine1 to all leaves
+    - endpoints: ["spine1:eth1", "leaf1:eth1"]
+    - endpoints: ["spine1:eth2", "leaf2:eth1"]
+    - endpoints: ["spine1:eth3", "leaf3:eth1"]
+    - endpoints: ["spine1:eth4", "leaf4:eth1"]
+    # Spine2 to all leaves
+    - endpoints: ["spine2:eth1", "leaf1:eth2"]
+    - endpoints: ["spine2:eth2", "leaf2:eth2"]
+    - endpoints: ["spine2:eth3", "leaf3:eth2"]
+    - endpoints: ["spine2:eth4", "leaf4:eth2"]
+    # MLAG peer-links
+    - endpoints: ["leaf1:eth3", "leaf2:eth3"]
+    - endpoints: ["leaf3:eth3", "leaf4:eth3"]

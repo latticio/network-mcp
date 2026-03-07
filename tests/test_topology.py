@@ -355,12 +355,27 @@ class TestDetectEcmpGroups:
         g = TopologyGraph.from_topology_dict({"nodes": nodes, "edges": edges})
         assert g.detect_ecmp_groups() == []
 
-    def test_ring_ecmp(self):
-        """Ring A-B-C has 2 paths between A and C → ECMP."""
+    def test_ring_3_node_no_ecmp(self):
+        """3-node ring A-B-C: paths between any pair differ in length (1 vs 2 hops) → no ECMP."""
         g = TopologyGraph.from_topology_dict(_make_ring_topology())
         groups = g.detect_ecmp_groups()
-        # At least one ECMP group should exist
+        assert groups == []
+
+    def test_ring_4_node_ecmp(self):
+        """4-node ring A-B-C-D: opposite nodes have 2 equal-length paths → ECMP."""
+        nodes = [{"id": n, "hostname": n, "platform": "eos", "management_ip": ""} for n in ["a", "b", "c", "d"]]
+        edges = [
+            {"source": "a", "target": "b", "source_port": "e1", "target_port": "e1", "speed": 10000},
+            {"source": "b", "target": "c", "source_port": "e2", "target_port": "e1", "speed": 10000},
+            {"source": "c", "target": "d", "source_port": "e2", "target_port": "e1", "speed": 10000},
+            {"source": "d", "target": "a", "source_port": "e2", "target_port": "e2", "speed": 10000},
+        ]
+        g = TopologyGraph.from_topology_dict({"nodes": nodes, "edges": edges})
+        groups = g.detect_ecmp_groups()
+        # a↔c has 2 paths of 2 hops each (a→b→c and a→d→c), same for b↔d
         assert len(groups) > 0
+        all_pairs = {frozenset([eg["source"], eg["dest"]]) for eg in groups}
+        assert frozenset(["a", "c"]) in all_pairs
 
     def test_group_fields_present(self):
         g = TopologyGraph.from_topology_dict(_make_spine_leaf_topology())

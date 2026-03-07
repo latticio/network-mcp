@@ -35,7 +35,12 @@ def _mlag_name_match(name_a: str, name_b: str) -> bool:
     Recognises two common naming conventions:
     - ``leaf-01a`` / ``leaf-01b`` — identical numeric prefix, letter suffix differs
     - ``leaf-01`` / ``leaf-02`` — same text prefix, sequential numeric suffix (diff == 1)
+
+    Identical names always return False (a device is not its own MLAG peer).
     """
+    if name_a == name_b:
+        return False
+
     m_a = _PAT_AB.match(name_a)
     m_b = _PAT_AB.match(name_b)
     if m_a and m_b and m_a.group(1).lower() == m_b.group(1).lower():

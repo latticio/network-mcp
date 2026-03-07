@@ -322,13 +322,21 @@ _MULTI_DEVICE_TOOLS = {
     "net_get_grafana_dashboard",
     # Drift report (multi-device, takes hosts list)
     "net_drift_report",
-    # Topology builder (multi-device, takes hosts list)
+    # Topology tools (multi-device, take hosts list instead of single host)
     "net_build_topology_from_lldp",
+    "net_show_path",
+    "net_get_redundancy_groups",
     # HTTP session tools (no host parameter — session management, not device ops)
     "net_session_create",
     "net_session_resume",
     "net_session_status",
     "net_session_end",
+    # Containerlab tools (operate on labs, not individual network devices)
+    "net_containerlab_discover",
+    "net_containerlab_inventory",
+    "net_containerlab_deploy",
+    "net_containerlab_destroy",
+    "net_containerlab_status",
 }
 
 

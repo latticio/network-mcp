@@ -48,6 +48,11 @@ benchmark_results.json
 *.key
 *.crt
 
+# Containerlab
+lab/devices.yaml
+lab/reports/
+clab-*/
+
 # Claude Code (local user config)
 .claude/settings.local.json
 .claude/memory/

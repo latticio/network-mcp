@@ -187,6 +187,12 @@ class TestStructuredOutputRegistration:
         "net_validate_change",
         "net_generate_playbook",
         "net_inventory_to_ansible",
+        # Containerlab tools (return dict[str, Any])
+        "net_containerlab_discover",
+        "net_containerlab_inventory",
+        "net_containerlab_deploy",
+        "net_containerlab_destroy",
+        "net_containerlab_status",
     ]
 
     def test_non_structured_tools_have_no_output_schema(self):
