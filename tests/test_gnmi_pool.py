@@ -123,6 +123,8 @@ class TestGnmiConnectionPoolTTLExpiry:
 
         with patch("network_mcp.gnmi_connection.gNMIclient", return_value=mock_client):
             pool.get_connection("switch1", 6030)
+            # Release the connection so it's not "in use" when we expire it
+            pool.release_connection("switch1", 6030)
             # Backdate beyond TTL to simulate expiry
             pool._pool[("switch1", 6030)].created_at = time.monotonic() - 20
 
@@ -147,10 +149,12 @@ class TestGnmiConnectionPoolMaxEviction:
 
         with patch("network_mcp.gnmi_connection.gNMIclient", side_effect=clients):
             pool.get_connection("switch1", 6030)
+            pool.release_connection("switch1", 6030)
             pool.get_connection("switch2", 6030)
+            pool.release_connection("switch2", 6030)
             assert pool.pool_size == 2
 
-            # Adding a third should evict the first
+            # Adding a third should evict the first (oldest with refcount 0)
             pool.get_connection("switch3", 6030)
             assert pool.pool_size == 2
             assert ("switch1", 6030) not in pool._pool

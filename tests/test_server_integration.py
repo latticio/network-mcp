@@ -603,8 +603,11 @@ class TestRbacCallToolRealWrapper:
     async def test_rbac_wrapper_installed_when_auth_enabled(self):
         """When AUTH_ENABLED=true and RBAC_ENABLED=true, call_tool should be wrapped."""
         reloaded_mcp = self._reload_with_rbac()
-        # The wrapper function name should be _rbac_call_tool
-        assert reloaded_mcp.call_tool.__name__ == "_rbac_call_tool"
+        # call_tool should be wrapped (RBAC, possibly further wrapped by session tracking)
+        wrapper_name = reloaded_mcp.call_tool.__name__
+        assert wrapper_name in ("_rbac_call_tool", "_session_tracking_call_tool"), (
+            f"Expected call_tool to be wrapped, got: {wrapper_name}"
+        )
 
     @pytest.mark.asyncio
     async def test_rbac_wrapper_no_token_passes_through(self):

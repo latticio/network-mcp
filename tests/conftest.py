@@ -150,21 +150,29 @@ def _reset_plugin_security_state():
 def _reset_helpers_state():
     """Reset helpers module state after each test to prevent cross-test leakage.
 
-    Guards against three contamination vectors:
+    Guards against four contamination vectors:
     1. ``helpers._settings`` replaced with a different ``NetworkSettings`` object
     2. ``settings.net_read_only`` left as ``False`` by write-mode tests
     3. ``helpers._get_settings`` replaced by ``unittest.mock.patch`` that was not
        properly cleaned up (the primary cause of full-suite write-test failures)
+    4. ``helpers._change_manager`` cached from a test that enabled change management
     """
     import network_mcp.helpers as helpers_mod
     from network_mcp.server import settings
 
     original_get_settings = helpers_mod._get_settings
+    original_change_mgmt = settings.net_change_mgmt_enabled
+    original_require_approval = getattr(settings, "net_change_require_approval", False)
     yield
     # Always force helpers._settings back to the canonical server.settings object
     helpers_mod._settings = settings
     # Always restore net_read_only to its production default (True)
     settings.net_read_only = True
+    # Always restore change management to disabled (default) and clear singleton
+    settings.net_change_mgmt_enabled = False
+    if hasattr(settings, "net_change_require_approval"):
+        settings.net_change_require_approval = False
+    helpers_mod._change_manager = None
     # Always restore _get_settings to the real function (not a mock)
     helpers_mod._get_settings = original_get_settings
 

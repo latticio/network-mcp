@@ -493,9 +493,12 @@ class TestRunShowCommandRateLimiting:
 
     def test_config_rate_limited(self, mock_conn_mgr, mock_node):
         """When config rate limit is exhausted, should return error dict."""
+        mock_cm = MagicMock()
+        mock_cm.enabled = False
         with (
             patch("network_mcp.helpers._get_settings") as mock_settings,
             patch("network_mcp.helpers.device_rate_limiter") as mock_rl,
+            patch("network_mcp.helpers._get_change_manager", return_value=mock_cm),
         ):
             mock_settings.return_value.net_read_only = False
             mock_settings.return_value.net_rate_limit_max_wait = 5.0

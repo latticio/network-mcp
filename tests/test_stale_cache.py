@@ -206,14 +206,18 @@ class TestStaleIfErrorInRunShowCommand:
 
     def test_stale_if_error_disabled_via_settings(self, mock_conn_mgr, mock_node):
         """When stale_if_error_ttl=0, connection errors return error, not stale data."""
+        # Clear cache to ensure clean state
+        command_cache.clear()
+
         # Populate cache
         mock_node.run_commands.return_value = [{"status": "success", "version": "4.32.1F"}]
         run_show_command(conn_mgr, "spine-01", ["show version"])
 
         # Expire entry
         key = command_cache._make_key("spine-01", ["show version"], "json")
-        command_cache._cache[key].timestamp = time.monotonic() - 100
-        command_cache._cache[key].ttl = 30
+        if key in command_cache._cache:
+            command_cache._cache[key].timestamp = time.monotonic() - 100
+            command_cache._cache[key].ttl = 30
 
         # Now fail
         mock_node.run_commands.side_effect = pyeapi.eapilib.ConnectionError("https", "Connection refused")

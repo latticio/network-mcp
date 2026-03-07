@@ -4,14 +4,19 @@ from unittest.mock import patch
 
 import pytest
 
+import network_mcp.helpers as _helpers_mod
 from network_mcp.server import settings
 
 
 @pytest.fixture(autouse=True)
 def _allow_writes():
-    """Ensure write operations are allowed for all tests in this module."""
+    """Ensure write operations are allowed and change management is disabled."""
+    _helpers_mod._change_manager = None
+    settings.net_change_mgmt_enabled = False
     with patch.object(settings, "net_read_only", False):
         yield
+    _helpers_mod._change_manager = None
+    settings.net_change_mgmt_enabled = False
 
 
 # --- VLAN write tools ---
