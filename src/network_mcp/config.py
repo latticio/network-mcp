@@ -36,6 +36,7 @@ class Platform(StrEnum):
     NXOS = "nxos"
     JUNOS = "junos"
     SONIC = "sonic"
+    PANOS = "panos"
 
 
 class PlatformSettings(BaseSettings):
@@ -540,6 +541,13 @@ class NetworkSettings(PlatformSettings):
     net_gnmi_pool_max: int = Field(default=20, ge=1, le=500)
     net_gnmi_pool_ttl: int = Field(default=300, ge=10, le=3600)
 
+    # Palo Alto PAN-OS settings
+    net_panos_api_key: SecretStr | None = Field(
+        default=None,
+        validation_alias=AliasChoices("NET_PANOS_API_KEY"),
+        description="PAN-OS XML API key for authentication (alternative to username/password)",
+    )
+
     # CloudVision Portal settings
     eos_cvp_url: str | None = None  # CVP URL (e.g., https://cvp.example.com)
     eos_cvp_token: SecretStr | None = None  # CVP service account token
@@ -724,7 +732,7 @@ class NetworkSettings(PlatformSettings):
     _KNOWN_OPTIONAL_MODULES: ClassVar[frozenset[str]] = frozenset(
         {"evpn_vxlan", "security", "vrf", "bfd", "event_monitor", "qos", "compliance"}
     )
-    _KNOWN_VENDORS: ClassVar[frozenset[str]] = frozenset({"eos", "iosxe", "nxos", "junos"})
+    _KNOWN_VENDORS: ClassVar[frozenset[str]] = frozenset({"eos", "iosxe", "nxos", "junos", "sonic", "panos"})
 
     @model_validator(mode="after")
     def _validate_module_names(self) -> "NetworkSettings":
@@ -821,6 +829,7 @@ _SECRET_FIELDS: frozenset[str] = frozenset(
         "snow_password",
         "audit_signing_key",
         "vault_token",
+        "net_panos_api_key",
     }
 )
 

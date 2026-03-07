@@ -55,4 +55,12 @@ try:
 except ImportError:
     logger.debug("SONiC driver not available (install 'sonic' extra for httpx support)")
 
-__all__ = ["DRIVER_REGISTRY", "DeviceDriver", "EosDriver", "NetworkDriver", "NotSupportedError"]
+# Conditionally register PAN-OS driver when httpx is available (cisco or sonic extra)
+try:
+    from network_mcp.drivers.palo_alto_panos import PanosDriver
+
+    DRIVER_REGISTRY["panos"] = PanosDriver  # type: ignore[assignment]
+except ImportError:
+    logger.debug("PAN-OS driver not available (install 'cisco' extra for httpx support)")
+
+__all__ = ["DRIVER_REGISTRY", "DeviceDriver", "EosDriver", "NetworkDriver", "NotSupportedError", "PanosDriver"]
