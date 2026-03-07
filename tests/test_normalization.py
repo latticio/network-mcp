@@ -424,7 +424,7 @@ class TestGetLldpNeighbors:
         assert isinstance(lldp, dict)
         assert "Ethernet1" in lldp
         assert "Ethernet2" in lldp
-        required_keys = {"hostname", "port", "system_description"}
+        required_keys = {"hostname", "port", "system_description", "management_ip"}
         for neighbors in lldp.values():
             assert isinstance(neighbors, list)
             for n in neighbors:
@@ -707,7 +707,7 @@ class TestCrossVendorGetLldpNeighbors:
 
     def test_neighbor_schema(self, mock_driver):
         lldp = mock_driver.get_lldp_neighbors()
-        required = {"hostname", "port", "system_description"}
+        required = {"hostname", "port", "system_description", "management_ip"}
         for intf, neighbors in lldp.items():
             assert isinstance(neighbors, list), f"{intf}: neighbors should be a list"
             for n in neighbors:

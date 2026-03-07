@@ -284,7 +284,7 @@ class TestParseLldpSsh:
 
     def test_neighbor_schema(self):
         lldp = _parse_lldp_ssh(SAMPLE_SHOW_LLDP)
-        required = {"hostname", "port", "system_description"}
+        required = {"hostname", "port", "system_description", "management_ip"}
         for intf, neighbors in lldp.items():
             for n in neighbors:
                 assert set(n.keys()) == required, f"{intf}: wrong keys"

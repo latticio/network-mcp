@@ -271,6 +271,7 @@ class MockEosDriver:
                             "hostname": info.get("systemName", ""),
                             "port": info.get("neighborInterfaceInfo", {}).get("interfaceId_v2", info.get("portId", "")),
                             "system_description": info.get("systemDescription", ""),
+                            "management_ip": info.get("managementAddress", ""),
                         }
                     )
             if intf_list:

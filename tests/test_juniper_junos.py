@@ -308,7 +308,7 @@ class TestJunosGetLldpNeighbors:
 
     def test_neighbor_schema(self):
         lldp = JunosDriver._normalize_lldp_neighbors(MOCK_LLDP_NEIGHBORS)
-        required = {"hostname", "port", "system_description"}
+        required = {"hostname", "port", "system_description", "management_ip"}
         for intf, neighbors in lldp.items():
             assert isinstance(neighbors, list)
             for n in neighbors:

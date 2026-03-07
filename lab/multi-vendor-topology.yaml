@@ -1,0 +1,84 @@
+# Multi-Vendor Containerlab Topology for network-mcp Testing
+#
+# Includes:
+#   - 2× Arista cEOS (spine/leaf, proven working)
+#   - 2× Nokia SR Linux (free, containerlab-native)
+#   - 1× SONiC-VS (open source virtual switch)
+#
+# Requires:
+#   - cEOS image: ceos:4.35.2F (or latest)
+#   - SR Linux image: ghcr.io/nokia/srlinux:latest (auto-pulled)
+#   - SONiC-VS image: docker-sonic-vs:latest (build from source or pull)
+#
+# Deploy: sudo containerlab deploy -t lab/multi-vendor-topology.yaml
+# Destroy: sudo containerlab destroy -t lab/multi-vendor-topology.yaml
+
+name: network-mcp-multivendor
+
+topology:
+  defaults:
+    env:
+      # Shared env vars for all nodes (if needed)
+      TZ: UTC
+
+  kinds:
+    ceos:
+      image: ceos:4.35.2F
+      env:
+        INTFTYPE: et
+        ETBA: 1
+        SKIP_ZEROTOUCH_BARRIER_IN_SYSDBINIT: 1
+        CEOS: 1
+        EOS_PLATFORM: ceoslab
+        container_name: "{{.ShortName}}"
+      startup-config: configs/ceos-base.cfg
+
+    srl:
+      image: ghcr.io/nokia/srlinux:latest
+      type: ixrd2l
+
+    sonic-vs:
+      image: docker-sonic-vs:latest
+
+  nodes:
+    # --- Arista cEOS (proven) ---
+    eos-spine1:
+      kind: ceos
+      startup-config: configs/eos-spine1.cfg
+
+    eos-leaf1:
+      kind: ceos
+      startup-config: configs/eos-leaf1.cfg
+
+    # --- Nokia SR Linux (free, containerlab-native) ---
+    srl-spine1:
+      kind: srl
+      startup-config: configs/srl-spine1.json
+
+    srl-leaf1:
+      kind: srl
+      startup-config: configs/srl-leaf1.json
+
+    # --- SONiC Virtual Switch ---
+    sonic-leaf1:
+      kind: sonic-vs
+      # SONiC config is applied post-deploy via config_db.json
+
+  links:
+    # EOS spine1 <-> EOS leaf1
+    - endpoints: ["eos-spine1:eth1", "eos-leaf1:eth1"]
+
+    # EOS spine1 <-> SRL leaf1 (cross-vendor link)
+    - endpoints: ["eos-spine1:eth2", "srl-leaf1:e1-1"]
+
+    # EOS spine1 <-> SONiC leaf1 (cross-vendor link)
+    - endpoints: ["eos-spine1:eth3", "sonic-leaf1:eth1"]
+
+    # SRL spine1 <-> EOS leaf1 (cross-vendor link)
+    - endpoints: ["srl-spine1:e1-1", "eos-leaf1:eth2"]
+
+    # SRL spine1 <-> SRL leaf1
+    - endpoints: ["srl-spine1:e1-2", "srl-leaf1:e1-2"]
+
+    # SRL spine1 <-> SONiC leaf1 (cross-vendor link)
+    - endpoints: ["srl-spine1:e1-3", "sonic-leaf1:eth2"]

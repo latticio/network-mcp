@@ -764,7 +764,7 @@ class TestNxosGetLldpNeighbors:
             assert isinstance(intf, str)
             assert isinstance(neighbors, list)
             for n in neighbors:
-                assert set(n.keys()) == {"hostname", "port", "system_description"}
+                assert set(n.keys()) == {"hostname", "port", "system_description", "management_ip"}
                 assert isinstance(n["hostname"], str)
                 assert isinstance(n["port"], str)
                 assert isinstance(n["system_description"], str)
@@ -951,7 +951,7 @@ class TestMockNxosDriver:
         assert isinstance(lldp, dict)
         for _intf, neighbors in lldp.items():
             for n in neighbors:
-                assert set(n.keys()) == {"hostname", "port", "system_description"}
+                assert set(n.keys()) == {"hostname", "port", "system_description", "management_ip"}
 
     def test_get_config(self):
         from tests.mock_data.nxos.mock_driver import MockNxosDriver

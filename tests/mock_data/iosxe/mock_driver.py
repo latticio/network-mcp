@@ -216,6 +216,7 @@ class MockIosXeDriver:
                 "hostname": entry.get("device-id", ""),
                 "port": entry.get("connecting-interface", ""),
                 "system_description": entry.get("system-desc", ""),
+                "management_ip": entry.get("mgmt-addr", ""),
             }
             if local_intf:
                 normalized.setdefault(local_intf, []).append(neighbor)

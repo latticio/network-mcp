@@ -11,7 +11,7 @@ import logging
 import re
 from typing import Any
 
-from network_mcp.drivers.base import NotSupportedError
+from network_mcp.drivers.base import NotSupportedError, make_not_supported_response
 from network_mcp.helpers import READ_ONLY, handle_tool_errors
 from network_mcp.server import conn_mgr, mcp
 
@@ -62,13 +62,7 @@ def net_get_acls(host: str) -> dict:
     try:
         acls = driver.get_acls()
     except NotSupportedError:
-        return {
-            "status": "not_supported",
-            "device": host,
-            "vendor": driver.vendor,
-            "platform": driver.platform,
-            "error": f"get_acls is not supported on {driver.platform}",
-        }
+        return make_not_supported_response("get_acls", host, driver.vendor, driver.platform)
     return {
         "status": "success",
         "device": host,
@@ -94,13 +88,7 @@ def net_get_aaa_status(host: str) -> dict:
     try:
         aaa = driver.get_aaa_status()
     except NotSupportedError:
-        return {
-            "status": "not_supported",
-            "device": host,
-            "vendor": driver.vendor,
-            "platform": driver.platform,
-            "error": f"get_aaa_status is not supported on {driver.platform}",
-        }
+        return make_not_supported_response("get_aaa_status", host, driver.vendor, driver.platform)
     return {
         "status": "success",
         "device": host,
@@ -126,13 +114,7 @@ def net_get_snmp_config(host: str) -> dict:
     try:
         snmp = driver.get_snmp_config()
     except NotSupportedError:
-        return {
-            "status": "not_supported",
-            "device": host,
-            "vendor": driver.vendor,
-            "platform": driver.platform,
-            "error": f"get_snmp_config is not supported on {driver.platform}",
-        }
+        return make_not_supported_response("get_snmp_config", host, driver.vendor, driver.platform)
     return {
         "status": "success",
         "device": host,
@@ -157,13 +139,7 @@ def net_get_users(host: str) -> dict:
     try:
         sessions = driver.get_user_sessions()
     except NotSupportedError:
-        return {
-            "status": "not_supported",
-            "device": host,
-            "vendor": driver.vendor,
-            "platform": driver.platform,
-            "error": f"get_user_sessions is not supported on {driver.platform}",
-        }
+        return make_not_supported_response("get_user_sessions", host, driver.vendor, driver.platform)
     return {
         "status": "success",
         "device": host,
@@ -189,13 +165,7 @@ def net_get_copp_policy(host: str) -> dict:
     try:
         copp = driver.get_copp_policy()
     except NotSupportedError:
-        return {
-            "status": "not_supported",
-            "device": host,
-            "vendor": driver.vendor,
-            "platform": driver.platform,
-            "error": f"get_copp_policy is not supported on {driver.platform}",
-        }
+        return make_not_supported_response("get_copp_policy", host, driver.vendor, driver.platform)
     return {
         "status": "success",
         "device": host,

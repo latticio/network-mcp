@@ -474,6 +474,7 @@ class SonicDriver:
                     "hostname": state.get("system-name", ""),
                     "port": state.get("port-id", state.get("port-description", "")),
                     "system_description": state.get("system-description", ""),
+                    "management_ip": state.get("management-address", ""),
                 })
             if nbr_list:
                 result[local_name] = nbr_list

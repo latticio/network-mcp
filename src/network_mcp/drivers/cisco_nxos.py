@@ -1097,6 +1097,7 @@ class NxosDriver:
                 "hostname": entry.get("sys_name", ""),
                 "port": entry.get("port_id", ""),
                 "system_description": entry.get("sys_desc", ""),
+                "management_ip": entry.get("mgmt_addr", ""),
             }
             if local_intf:
                 normalized.setdefault(local_intf, []).append(neighbor)
@@ -1111,6 +1112,7 @@ class NxosDriver:
         hostname = ""
         port = ""
         sys_desc = ""
+        mgmt_ip = ""
 
         for line in output.splitlines():
             line_stripped = line.strip()
@@ -1121,18 +1123,22 @@ class NxosDriver:
                             "hostname": hostname,
                             "port": port,
                             "system_description": sys_desc,
+                            "management_ip": mgmt_ip,
                         }
                     )
                 local_intf = line_stripped.split(":", 1)[1].strip()
                 hostname = ""
                 port = ""
                 sys_desc = ""
+                mgmt_ip = ""
             elif line_stripped.startswith("System Name:"):
                 hostname = line_stripped.split(":", 1)[1].strip()
             elif line_stripped.startswith("Port id:"):
                 port = line_stripped.split(":", 1)[1].strip()
             elif line_stripped.startswith("System Description:"):
                 sys_desc = line_stripped.split(":", 1)[1].strip()
+            elif line_stripped.startswith("Management Address:"):
+                mgmt_ip = line_stripped.split(":", 1)[1].strip()
 
         if local_intf and hostname:
             normalized.setdefault(local_intf, []).append(
@@ -1140,6 +1146,7 @@ class NxosDriver:
                     "hostname": hostname,
                     "port": port,
                     "system_description": sys_desc,
+                    "management_ip": mgmt_ip,
                 }
             )
 

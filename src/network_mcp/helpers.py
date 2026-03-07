@@ -680,6 +680,24 @@ def _get_settings():
     return _settings
 
 
+def refresh_settings(new_settings=None):
+    """Invalidate and optionally replace the cached settings singleton.
+
+    When called without arguments, the next call to ``_get_settings()`` will
+    create a fresh ``NetworkSettings`` from the current environment. When
+    *new_settings* is provided, it is installed directly and the module-level
+    singletons (rate limiter, cache, circuit breaker) are rebuilt immediately.
+
+    This is useful in testing (where env vars change between tests) and in
+    dynamic configuration scenarios.
+    """
+    global _settings
+    if new_settings is not None:
+        _init_settings(new_settings)
+    else:
+        _settings = None
+
+
 # --- Per-Device Rate Limiter ---
 
 

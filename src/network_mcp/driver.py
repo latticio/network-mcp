@@ -347,25 +347,17 @@ class EosDriver(DeviceDriver):
                 neighbor_list = neighbors if isinstance(neighbors, list) else [neighbors]
                 for n in neighbor_list:
                     neighbor_info = n.get("lldpNeighborInfo", [n])
-                    if isinstance(neighbor_info, list):
-                        for info in neighbor_info:
-                            intf_list.append(
-                                {
-                                    "hostname": info.get("systemName", ""),
-                                    "port": info.get("neighborInterfaceInfo", {}).get(
-                                        "interfaceId_v2", info.get("portId", "")
-                                    ),
-                                    "system_description": info.get("systemDescription", ""),
-                                }
-                            )
-                    else:
+                    if not isinstance(neighbor_info, list):
+                        neighbor_info = [neighbor_info]
+                    for info in neighbor_info:
                         intf_list.append(
                             {
-                                "hostname": neighbor_info.get("systemName", ""),
-                                "port": neighbor_info.get("neighborInterfaceInfo", {}).get(
-                                    "interfaceId_v2", neighbor_info.get("portId", "")
+                                "hostname": info.get("systemName", ""),
+                                "port": info.get("neighborInterfaceInfo", {}).get(
+                                    "interfaceId_v2", info.get("portId", "")
                                 ),
-                                "system_description": neighbor_info.get("systemDescription", ""),
+                                "system_description": info.get("systemDescription", ""),
+                                "management_ip": info.get("managementAddress", ""),
                             }
                         )
                 if intf_list:

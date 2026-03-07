@@ -149,6 +149,10 @@ class ConnectionManager:
         self._refcounts: dict[str, int] = {}
         self._verified: set[str] = set()
         self._nodes_lock = threading.Lock()
+        # Per-host locks ensure only one thread uses a driver at a time,
+        # preventing pyeapi's non-thread-safe HTTP transport from concurrent access.
+        self._host_locks: dict[str, threading.Lock] = {}
+        self._host_locks_guard = threading.Lock()
         self._inventory: dict[str, DeviceCredentials] = {}
         self._default_username = settings.net_username
         self._default_password = settings.net_password.get_secret_value()
@@ -225,6 +229,13 @@ class ConnectionManager:
             default_transport=self._default_transport,
         )
         self._inventory = backend.get_devices()
+
+    def _get_host_lock(self, host: str) -> threading.Lock:
+        """Get or create a per-host lock for thread-safe driver access."""
+        with self._host_locks_guard:
+            if host not in self._host_locks:
+                self._host_locks[host] = threading.Lock()
+            return self._host_locks[host]
 
     @staticmethod
     def _invalidate_cache_for_host(host: str) -> None:
@@ -333,74 +344,81 @@ class ConnectionManager:
 
     @contextmanager
     def acquire(self, host: str, verify: bool | None = None) -> Generator[NetworkDriver, None, None]:
-        """Get a connection with ref-count protection. Use as context manager.
+        """Get a connection with ref-count and per-host lock protection.
 
-        Increments refcount atomically with driver retrieval (under the same lock),
-        preventing another thread from evicting the connection between get and use.
-        Verification runs outside the lock to avoid blocking other threads during I/O.
+        Thread-safety: A per-host lock ensures only one thread uses a driver at
+        a time, preventing pyeapi's non-thread-safe HTTP transport from concurrent
+        access. Different hosts are fully parallel. The pool-level lock (_nodes_lock)
+        is only held briefly for bookkeeping, never during I/O.
 
         Args:
             host: Device hostname, IP, or inventory name.
             verify: If True, validate connection on first use.
         """
-        checkout_start = time.monotonic()
-        need_verify = False
-        with self._nodes_lock:
-            should_verify = verify if verify is not None else self._auto_verify
+        # Acquire the per-host lock FIRST to serialize access to this device
+        host_lock = self._get_host_lock(host)
+        host_lock.acquire()
+        try:
+            checkout_start = time.monotonic()
+            need_verify = False
+            with self._nodes_lock:
+                should_verify = verify if verify is not None else self._auto_verify
 
-            if host in self._drivers:
-                driver = self._drivers[host]
-                need_verify = should_verify and host not in self._verified
-            else:
-                # Need to create a new connection
-                if len(self._drivers) >= self._max_connections:
-                    if not self._evict_one():
-                        raise ConnectionError(
-                            f"Connection pool exhausted ({self._max_connections}/{self._max_connections} in use). "
-                            "Retry later."
+                if host in self._drivers:
+                    driver = self._drivers[host]
+                    need_verify = should_verify and host not in self._verified
+                else:
+                    # Need to create a new connection
+                    if len(self._drivers) >= self._max_connections:
+                        if not self._evict_one():
+                            raise ConnectionError(
+                                f"Connection pool exhausted ({self._max_connections}/{self._max_connections} in use). "
+                                "Retry later."
+                            )
+
+                    if host in self._inventory:
+                        creds = self._inventory[host]
+                    else:
+                        username, password = self._resolve_credentials(host)
+                        creds = DeviceCredentials(
+                            host=host,
+                            username=username,
+                            password=SecretStr(password),
+                            transport=self._default_transport,
                         )
 
-                if host in self._inventory:
-                    creds = self._inventory[host]
-                else:
-                    username, password = self._resolve_credentials(host)
-                    creds = DeviceCredentials(
-                        host=host,
-                        username=username,
-                        password=SecretStr(password),
-                        transport=self._default_transport,
-                    )
+                    driver = self._create_driver(creds, device_name=host)
+                    self._drivers[host] = driver
+                    need_verify = should_verify
+                    with self._stats_lock:
+                        self._total_created += 1
 
-                driver = self._create_driver(creds, device_name=host)
-                self._drivers[host] = driver
-                need_verify = should_verify
-                with self._stats_lock:
-                    self._total_created += 1
+                # Atomic refcount increment
+                self._refcounts[host] = self._refcounts.get(host, 0) + 1
 
-            # Atomic refcount increment
-            self._refcounts[host] = self._refcounts.get(host, 0) + 1
+            # Verify OUTSIDE the pool lock to avoid blocking other hosts during I/O
+            if need_verify:
+                try:
+                    self._verify_driver(host, driver)
+                except Exception:
+                    self._cleanup_failed_verify(host, driver)
+                    raise
 
-        # Verify OUTSIDE the lock to avoid blocking all threads during network I/O
-        if need_verify:
+            checkout_elapsed = time.monotonic() - checkout_start
+            with self._stats_lock:
+                self._total_checkouts += 1
+                self._total_checkout_time += checkout_elapsed
+
             try:
-                self._verify_driver(host, driver)
-            except Exception:
-                self._cleanup_failed_verify(host, driver)
-                raise
-
-        checkout_elapsed = time.monotonic() - checkout_start
-        with self._stats_lock:
-            self._total_checkouts += 1
-            self._total_checkout_time += checkout_elapsed
-
-        try:
-            yield driver
+                yield driver
+            finally:
+                with self._nodes_lock:
+                    if host in self._refcounts:
+                        self._refcounts[host] -= 1
+                        if self._refcounts[host] <= 0:
+                            self._refcounts.pop(host, None)
         finally:
-            with self._nodes_lock:
-                if host in self._refcounts:
-                    self._refcounts[host] -= 1
-                    if self._refcounts[host] <= 0:
-                        self._refcounts.pop(host, None)
+            host_lock.release()
 
     def get_driver(self, host: str, verify: bool | None = None) -> NetworkDriver:
         """Get a DeviceDriver for a device.
@@ -475,6 +493,8 @@ class ConnectionManager:
             if driver:
                 self._close_driver(driver)
                 self._invalidate_cache_for_host(host)
+        with self._host_locks_guard:
+            self._host_locks.pop(host, None)
 
     def list_devices(self) -> list[str]:
         """Return all device names from the inventory."""
@@ -542,3 +562,5 @@ class ConnectionManager:
             self._drivers.clear()
             self._refcounts.clear()
             self._verified.clear()
+        with self._host_locks_guard:
+            self._host_locks.clear()

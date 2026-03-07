@@ -260,10 +260,14 @@ def net_get_transceiver_info(host: str) -> dict:
 
 
 def _build_interface_description_commands(platform: str, interface: str, description: str) -> list[str]:
-    """Build vendor-specific commands to set an interface description."""
+    """Build vendor-specific commands to set or clear an interface description."""
+    if not description:
+        # Clear the description
+        if platform == "junos":
+            return [f"delete interfaces {interface} description"]
+        return [f"interface {interface}", "no description"]
     if platform == "junos":
         # JunOS uses set-style configuration
-        # Interface name needs unit extraction for logical interfaces
         return [f'set interfaces {interface} description "{description}"']
     # EOS, IOS-XE, NX-OS all use the same syntax
     return [f"interface {interface}", f"description {description}"]
@@ -294,16 +298,18 @@ def net_configure_interface_description(host: str, interface: str, description: 
     Args:
         host: Device hostname, IP address, or inventory name.
         interface: Interface name (e.g., Ethernet1, GigabitEthernet0/0, xe-0/0/0).
-        description: Interface description text.
+        description: Interface description text. Pass empty string "" to clear the description.
     """
     intf_err = validate_multi_vendor_interface_name(interface)
     if intf_err:
         return {"status": "error", "device": host, "error": intf_err}
-    desc_err = validate_cli_param(description, "description")
-    if desc_err:
-        return {"status": "error", "device": host, "error": desc_err}
-    if len(description) > 254:
-        return {"status": "error", "device": host, "error": "Description must be 254 characters or fewer"}
+    # Allow empty string to clear description; only validate non-empty values
+    if description:
+        desc_err = validate_cli_param(description, "description")
+        if desc_err:
+            return {"status": "error", "device": host, "error": desc_err}
+        if len(description) > 254:
+            return {"status": "error", "device": host, "error": "Description must be 254 characters or fewer"}
 
     driver = conn_mgr.get_driver(host)
     commands = _build_interface_description_commands(driver.platform, interface, description)

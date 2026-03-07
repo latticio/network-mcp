@@ -985,6 +985,7 @@ class IosXeDriver:
                 "hostname": entry.get("device-id", ""),
                 "port": entry.get("connecting-interface", ""),
                 "system_description": entry.get("system-desc", ""),
+                "management_ip": entry.get("mgmt-addr", ""),
             }
             if local_intf:
                 normalized.setdefault(local_intf, []).append(neighbor)
@@ -999,6 +1000,8 @@ class IosXeDriver:
         hostname = ""
         port = ""
         sys_desc = ""
+        mgmt_ip = ""
+        in_mgmt_section = False
 
         for line in output.splitlines():
             line_stripped = line.strip()
@@ -1010,18 +1013,28 @@ class IosXeDriver:
                             "hostname": hostname,
                             "port": port,
                             "system_description": sys_desc,
+                            "management_ip": mgmt_ip,
                         }
                     )
                 local_intf = line_stripped.split(":", 1)[1].strip()
                 hostname = ""
                 port = ""
                 sys_desc = ""
+                mgmt_ip = ""
+                in_mgmt_section = False
             elif line_stripped.startswith("System Name:"):
                 hostname = line_stripped.split(":", 1)[1].strip()
             elif line_stripped.startswith("Port id:"):
                 port = line_stripped.split(":", 1)[1].strip()
             elif line_stripped.startswith("System Description:"):
                 sys_desc = line_stripped.split(":", 1)[1].strip()
+            elif line_stripped.startswith("Management Addresses"):
+                in_mgmt_section = True
+            elif in_mgmt_section and line_stripped.startswith("IP:"):
+                mgmt_ip = line_stripped.split(":", 1)[1].strip()
+                in_mgmt_section = False
+            elif in_mgmt_section and not line_stripped.startswith("IP"):
+                in_mgmt_section = False
 
         # Save last entry
         if local_intf and hostname:
@@ -1030,6 +1043,7 @@ class IosXeDriver:
                     "hostname": hostname,
                     "port": port,
                     "system_description": sys_desc,
+                    "management_ip": mgmt_ip,
                 }
             )
 

@@ -393,6 +393,7 @@ def _parse_lldp_ssh(output: str) -> dict[str, list[dict]]:
                 "hostname": hostname,
                 "port": port,
                 "system_description": "",
+                "management_ip": "",
             }
         )
 
@@ -1216,11 +1217,14 @@ class JunosDriver:
                 port = _xml_find_text(neighbor, "lldp-remote-port-description")
             sys_desc = _xml_find_text(neighbor, "lldp-remote-system-description")
 
+            mgmt_ip = _xml_find_text(neighbor, "lldp-remote-management-address")
+
             normalized.setdefault(local_intf, []).append(
                 {
                     "hostname": hostname,
                     "port": port,
                     "system_description": sys_desc,
+                    "management_ip": mgmt_ip,
                 }
             )
 

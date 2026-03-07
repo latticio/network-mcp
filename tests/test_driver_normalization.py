@@ -1019,7 +1019,7 @@ class TestJunosGetArpTable:
 # ============================================================================
 
 
-LLDP_NEIGHBOR_KEYS = {"hostname", "port", "system_description"}
+LLDP_NEIGHBOR_KEYS = {"hostname", "port", "system_description", "management_ip"}
 
 
 class TestEosGetLldpNeighbors:

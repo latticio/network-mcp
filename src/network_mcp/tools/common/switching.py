@@ -83,6 +83,51 @@ def net_build_topology_from_lldp(hosts: list[str]) -> dict:
             lldp_by_host[host] = None
             nodes[host]["error"] = str(exc)
 
+    # Build management IP reverse lookup for fallback matching
+    mgmt_ip_to_host_id: dict[str, str] = {}
+    for neighbor_data in lldp_by_host.values():
+        if neighbor_data is None:
+            continue
+        for _port, nlist in neighbor_data.items():
+            for n in nlist:
+                mgmt_ip = n.get("management_ip", "")
+                if mgmt_ip and mgmt_ip in nodes:
+                    mgmt_ip_to_host_id[mgmt_ip] = mgmt_ip
+    # Also map host IDs themselves as potential IPs
+    for host_id in nodes:
+        mgmt_ip_to_host_id[host_id] = host_id
+
+    def _resolve_neighbor(remote_hostname: str, remote_mgmt_ip: str) -> str:
+        """Resolve LLDP neighbor to a known host_id with fallback strategies.
+
+        1. Exact hostname match (fast path)
+        2. Management IP match (handles truncated hostnames on cEOS)
+        3. Prefix match — if exactly one known hostname starts with the remote name,
+           it's likely the same device with a truncated LLDP system name
+        """
+        # 1. Exact match
+        if remote_hostname in hostname_to_host_id:
+            return hostname_to_host_id[remote_hostname]
+
+        # 2. Management IP match
+        if remote_mgmt_ip and remote_mgmt_ip in mgmt_ip_to_host_id:
+            return mgmt_ip_to_host_id[remote_mgmt_ip]
+
+        # 3. Prefix match for truncated hostnames (e.g., "leaf" matching "leaf1")
+        if remote_hostname:
+            prefix_matches = [
+                hid for hname, hid in hostname_to_host_id.items()
+                if hname.startswith(remote_hostname) and hname != remote_hostname
+            ]
+            if len(prefix_matches) == 1:
+                logger.debug(
+                    "LLDP hostname '%s' prefix-matched to '%s'",
+                    remote_hostname, prefix_matches[0],
+                )
+                return prefix_matches[0]
+
+        return remote_hostname
+
     # Second pass: build edges, deduplicating symmetric A->B / B->A links
     edges: list[dict] = []
     seen_edge_keys: set[frozenset] = set()
@@ -97,9 +142,10 @@ def net_build_topology_from_lldp(hosts: list[str]) -> dict:
             for neighbor in neighbor_list:
                 remote_hostname = neighbor.get("hostname", "")
                 remote_port = neighbor.get("port", "")
+                remote_mgmt_ip = neighbor.get("management_ip", "")
 
-                # Resolve remote hostname to a known host_id when possible
-                remote_id = hostname_to_host_id.get(remote_hostname, remote_hostname)
+                # Resolve remote hostname to a known host_id with fallback strategies
+                remote_id = _resolve_neighbor(remote_hostname, remote_mgmt_ip)
 
                 speed = speeds.get(local_port, 0)
 

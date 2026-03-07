@@ -132,6 +132,8 @@ class NetworkDriver(Protocol):
                 - hostname (str): Remote system name
                 - port (str): Remote port identifier
                 - system_description (str): Remote system description
+                - management_ip (str): Remote management IP address
+                  (empty string if not available from the vendor API)
         """
         ...
 
@@ -662,3 +664,65 @@ class NetworkDriver(Protocol):
         Raises ConnectionError if reconnection fails.
         """
         ...
+
+
+# --- Platform support map ---
+
+# Maps getter method names to the list of platforms that implement them
+# (i.e., don't raise NotSupportedError). Updated as drivers are expanded.
+GETTER_PLATFORM_SUPPORT: dict[str, list[str]] = {
+    "get_facts": ["eos", "iosxe", "nxos", "junos", "sonic"],
+    "get_interfaces": ["eos", "iosxe", "nxos", "junos", "sonic"],
+    "get_bgp_summary": ["eos", "iosxe", "nxos", "junos", "sonic"],
+    "get_arp_table": ["eos", "iosxe", "nxos", "junos", "sonic"],
+    "get_lldp_neighbors": ["eos", "iosxe", "nxos", "junos", "sonic"],
+    "get_config": ["eos", "iosxe", "nxos", "junos", "sonic"],
+    "get_vlans": ["eos", "iosxe", "nxos", "junos"],
+    "get_vlan_detail": ["eos", "iosxe", "nxos"],
+    "get_interface_counters": ["eos", "iosxe", "nxos", "junos"],
+    "get_interface_errors": ["eos", "iosxe", "nxos", "junos"],
+    "get_ip_interfaces": ["eos", "iosxe", "nxos", "junos"],
+    "get_transceiver_info": ["eos", "iosxe"],
+    "get_ospf_neighbors": ["eos", "iosxe", "nxos", "junos"],
+    "get_ospf_interfaces": ["eos", "iosxe", "junos"],
+    "get_bgp_neighbors": ["eos", "iosxe", "nxos", "junos"],
+    "get_route_table": ["eos", "iosxe", "nxos", "junos", "sonic"],
+    "get_route_summary": ["eos", "iosxe", "nxos"],
+    "get_mac_table": ["eos", "iosxe", "nxos", "junos"],
+    "get_stp_status": ["eos", "iosxe", "nxos"],
+    "get_port_channels": ["eos", "iosxe", "nxos"],
+    "get_environment": ["eos", "iosxe", "nxos", "junos"],
+    "get_ntp_status": ["eos", "iosxe", "nxos", "junos"],
+    "get_cpu_memory": ["eos", "iosxe", "nxos", "junos"],
+    "get_acls": ["eos", "iosxe", "nxos"],
+    "get_aaa_status": ["eos", "iosxe"],
+    "get_snmp_config": ["eos", "iosxe", "nxos"],
+    "get_user_sessions": ["eos", "iosxe"],
+    "get_copp_policy": ["eos", "nxos"],
+    "get_running_config_section": ["eos", "iosxe", "nxos", "junos"],
+    "get_startup_config": ["eos", "iosxe", "nxos"],
+    "get_vrfs": ["eos", "iosxe", "nxos", "junos"],
+    "get_vrf_detail": ["eos", "iosxe", "nxos"],
+    "get_trunk_interfaces": ["eos", "iosxe", "nxos"],
+    "ping": ["eos", "iosxe", "nxos", "junos"],
+    "traceroute": ["eos", "iosxe", "nxos", "junos"],
+}
+
+
+def make_not_supported_response(
+    getter_name: str, host: str, vendor: str, platform: str
+) -> dict:
+    """Build a standardized not_supported response with platform guidance.
+
+    Includes which platforms DO support the operation so users/LLMs know
+    if the tool works on other devices in their inventory.
+    """
+    supported = GETTER_PLATFORM_SUPPORT.get(getter_name, [])
+    return {
+        "status": "not_supported",
+        "device": host,
+        "vendor": vendor,
+        "platform": platform,
+        "error": f"{getter_name} is not supported on {platform}",
+        "supported_platforms": supported,
+    }
