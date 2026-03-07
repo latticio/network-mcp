@@ -320,6 +320,26 @@ class TestNetGetLldpNeighbors:
 
         net_get_lldp_neighbors("spine-01")
         mock_driver.get_lldp_neighbors.assert_called_once()
+        mock_driver.get_interfaces.assert_called_once()
+
+    def test_speed_included_when_interface_data_available(self, mock_common_conn_mgr):
+        from network_mcp.tools.common.switching import net_get_lldp_neighbors
+
+        result = net_get_lldp_neighbors("spine-01")
+        # Ethernet1 has speed=100000 Mbps → "100G"; Ethernet2 has speed=1000 Mbps → "1G"
+        assert result["data"]["Ethernet1"][0]["local_port_speed"] == "100G"
+        assert result["data"]["Ethernet2"][0]["local_port_speed"] == "1G"
+
+    def test_speed_null_when_interface_data_unavailable(self, mock_driver):
+        from network_mcp.tools.common.switching import net_get_lldp_neighbors
+
+        mock_driver.get_interfaces.side_effect = Exception("not supported")
+        with patch.object(conn_mgr, "get_driver", return_value=mock_driver):
+            result = net_get_lldp_neighbors("spine-01")
+        assert result["status"] == "success"
+        for neighbor_list in result["data"].values():
+            for neighbor in neighbor_list:
+                assert neighbor["local_port_speed"] is None
 
 
 # --- _filter_fields utility ---

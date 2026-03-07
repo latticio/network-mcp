@@ -137,20 +137,59 @@ def net_build_topology_from_lldp(hosts: list[str]) -> dict:
     }
 
 
+def _mbps_to_speed_label(speed_mbps: int) -> str | None:
+    """Convert interface speed in Mbps to a human-readable label (e.g. '100G').
+
+    Returns None when speed is zero or unknown.
+    """
+    if not speed_mbps:
+        return None
+    if speed_mbps >= 400000:
+        return "400G"
+    if speed_mbps >= 100000:
+        return "100G"
+    if speed_mbps >= 40000:
+        return "40G"
+    if speed_mbps >= 25000:
+        return "25G"
+    if speed_mbps >= 10000:
+        return "10G"
+    if speed_mbps >= 1000:
+        return "1G"
+    return f"{speed_mbps}M"
+
+
 @mcp.tool(annotations=READ_ONLY)
 @handle_tool_errors
 def net_get_lldp_neighbors(host: str) -> dict:
     """Get LLDP neighbor information from any supported network device.
 
-    Returns discovered neighbors per interface with hostname, port, and
-    system description. Works with Arista EOS, Cisco IOS-XE, Cisco NX-OS,
-    and Juniper JunOS.
+    Returns discovered neighbors per interface with hostname, port, system description,
+    and local_port_speed. The local_port_speed field shows the speed of the local
+    interface in human-readable form (e.g. '1G', '10G', '25G', '100G', '400G').
+    If interface speed data is unavailable, local_port_speed is set to null.
+    Works with Arista EOS, Cisco IOS-XE, Cisco NX-OS, and Juniper JunOS.
 
     Args:
         host: Hostname, IP address, or inventory name of the network device.
     """
     driver = conn_mgr.get_driver(host)
     neighbors = driver.get_lldp_neighbors()
+
+    # Fetch interface speeds (best-effort — failure yields null for all ports)
+    speeds: dict[str, int] = {}
+    try:
+        ifaces = driver.get_interfaces()
+        speeds = {name: data.get("speed", 0) for name, data in ifaces.items()}
+    except Exception:  # noqa: BLE001
+        logger.debug("get_interfaces failed for %s; local_port_speed will be null", host)
+
+    # Merge local_port_speed into each neighbor entry
+    for local_port, neighbor_list in neighbors.items():
+        speed_label = _mbps_to_speed_label(speeds.get(local_port, 0))
+        for neighbor in neighbor_list:
+            neighbor["local_port_speed"] = speed_label
+
     return {
         "status": "success",
         "device": host,

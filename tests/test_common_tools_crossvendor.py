@@ -180,3 +180,4 @@ class TestNetGetLldpNeighbors:
             for neighbor in neighbors:
                 assert "hostname" in neighbor
                 assert "port" in neighbor
+                assert "local_port_speed" in neighbor
