@@ -166,15 +166,30 @@ class TestFlattenNotifications:
 class TestGrpcErrorMapping:
     """Tests for gRPC error code to user-friendly message mapping."""
 
+    @staticmethod
+    def _make_grpc_error(status_code, details=""):
+        """Create a mock that passes isinstance(error, grpc.RpcError).
+
+        grpc.RpcError doesn't define .code()/.details() (they come from
+        grpc.Call), so we create a dynamic subclass to satisfy isinstance
+        while still allowing attribute access.
+        """
+        import grpc
+
+        class MockRpcError(grpc.RpcError):
+            pass
+
+        error = MockRpcError()
+        error.code = MagicMock(return_value=status_code)
+        error.details = MagicMock(return_value=details)
+        return error
+
     @pytest.mark.skipif(not GNMI_AVAILABLE, reason="pygnmi not installed")
     def test_map_unavailable(self):
         """UNAVAILABLE maps to connectivity message."""
         import grpc
 
-        # Create a mock that behaves like a real gRPC error
-        mock_error = MagicMock(spec=grpc.RpcError)
-        mock_error.code.return_value = grpc.StatusCode.UNAVAILABLE
-        mock_error.details.return_value = "connection refused"
+        mock_error = self._make_grpc_error(grpc.StatusCode.UNAVAILABLE, "connection refused")
         msg = _map_grpc_error(mock_error)
         assert "unreachable" in msg.lower() or "not enabled" in msg.lower()
 
@@ -183,9 +198,7 @@ class TestGrpcErrorMapping:
         """UNAUTHENTICATED maps to auth failure message."""
         import grpc
 
-        mock_error = MagicMock(spec=grpc.RpcError)
-        mock_error.code.return_value = grpc.StatusCode.UNAUTHENTICATED
-        mock_error.details.return_value = ""
+        mock_error = self._make_grpc_error(grpc.StatusCode.UNAUTHENTICATED)
         msg = _map_grpc_error(mock_error)
         assert "authentication" in msg.lower()
 
@@ -194,9 +207,7 @@ class TestGrpcErrorMapping:
         """NOT_FOUND maps to path not found message."""
         import grpc
 
-        mock_error = MagicMock(spec=grpc.RpcError)
-        mock_error.code.return_value = grpc.StatusCode.NOT_FOUND
-        mock_error.details.return_value = ""
+        mock_error = self._make_grpc_error(grpc.StatusCode.NOT_FOUND)
         msg = _map_grpc_error(mock_error)
         assert "path not found" in msg.lower()
 
@@ -205,9 +216,7 @@ class TestGrpcErrorMapping:
         """DEADLINE_EXCEEDED maps to timeout message."""
         import grpc
 
-        mock_error = MagicMock(spec=grpc.RpcError)
-        mock_error.code.return_value = grpc.StatusCode.DEADLINE_EXCEEDED
-        mock_error.details.return_value = ""
+        mock_error = self._make_grpc_error(grpc.StatusCode.DEADLINE_EXCEEDED)
         msg = _map_grpc_error(mock_error)
         assert "timed out" in msg.lower()
 

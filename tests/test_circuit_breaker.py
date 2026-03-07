@@ -350,14 +350,19 @@ class TestCircuitBreakerHelperIntegration:
             circuit_breaker_registry._enabled = original_enabled
 
     def test_disabled_circuit_breaker_allows_all(self, mock_conn_mgr, mock_node):
-        """When circuit breaker is disabled (default), requests always pass through."""
+        """When circuit breaker is disabled, requests always pass through."""
         from network_mcp.helpers import circuit_breaker_registry, run_show_command
         from network_mcp.server import conn_mgr
 
-        assert circuit_breaker_registry._enabled is False
-        mock_node.run_commands.return_value = [{"version": "4.32.1F"}]
-        result = run_show_command(conn_mgr, "test-switch", ["show version"])
-        assert result["status"] == "success"
+        original_enabled = circuit_breaker_registry._enabled
+        try:
+            circuit_breaker_registry._enabled = False
+            assert circuit_breaker_registry._enabled is False
+            mock_node.run_commands.return_value = [{"version": "4.32.1F"}]
+            result = run_show_command(conn_mgr, "test-switch", ["show version"])
+            assert result["status"] == "success"
+        finally:
+            circuit_breaker_registry._enabled = original_enabled
 
 
 # --- Property vs get_state() side-effect tests ---

@@ -103,6 +103,9 @@ class TestGnmiConnectionPoolTTLExpiry:
             client1 = pool.get_connection("switch1", 6030)
             assert client1 is mock_client1
 
+            # Release the connection so it's not "in use" when we expire it
+            pool.release_connection("switch1", 6030)
+
             # Simulate TTL expiry by backdating created_at beyond TTL
             pool._pool[("switch1", 6030)].created_at = time.monotonic() - 20
 
