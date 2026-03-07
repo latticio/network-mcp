@@ -36,6 +36,8 @@ htmlcov/
 .pytest_cache/
 .hypothesis/
 coverage.xml
+.benchmarks/
+benchmark_results.json
 
 # Linting
 .ruff_cache/
