@@ -14,6 +14,18 @@ logger = logging.getLogger("network-mcp")
 
 MAX_DEVICES = 200
 
+
+def _extract_device_data(successes: dict[str, Any]) -> dict[str, Any]:
+    """Extract per-device data from multi-device operation results."""
+    device_data: dict[str, Any] = {}
+    for host, dev_result in successes.items():
+        if isinstance(dev_result, dict) and "data" in dev_result:
+            device_data[host] = dev_result["data"]
+        else:
+            device_data[host] = dev_result
+    return device_data
+
+
 # --- Internal operations called by the executor ---
 
 
@@ -207,16 +219,7 @@ async def eos_fabric_health_summary(targets: str = "all", ctx: Context | None = 
 
     result = await execute_on_devices(conn_mgr, hosts, _health_operation, ctx=ctx)
     output = result.to_response(action="fabric_health")
-
-    # Extract per-device data for cleaner summary
-    device_data = {}
-    for host, dev_result in result.successes.items():
-        if isinstance(dev_result, dict) and "data" in dev_result:
-            device_data[host] = dev_result["data"]
-        else:
-            device_data[host] = dev_result
-
-    output["results"] = device_data
+    output["results"] = _extract_device_data(result.successes)
     return output
 
 
@@ -389,14 +392,7 @@ async def eos_fabric_health_async(targets: str = "all", ctx: Context | None = No
 
             result = await execute_on_devices(conn_mgr, hosts, _health_operation)
             output = result.to_response(action="fabric_health_async")
-
-            device_data = {}
-            for host, dev_result in result.successes.items():
-                if isinstance(dev_result, dict) and "data" in dev_result:
-                    device_data[host] = dev_result["data"]
-                else:
-                    device_data[host] = dev_result
-            output["results"] = device_data
+            output["results"] = _extract_device_data(result.successes)
 
             await task_ctx.update_status(f"Completed: {result.success_count}/{result.total} devices healthy")
 
@@ -410,18 +406,10 @@ async def eos_fabric_health_async(targets: str = "all", ctx: Context | None = No
             experimental = ctx.request_context.experimental  # type: ignore[union-attr]
             return await experimental.run_task(_task_work)  # type: ignore[no-any-return]
         except Exception as e:
-            logger.debug(f"MCP Task creation failed, falling back to sync: {e}")
+            logger.debug("MCP Task creation failed, falling back to sync: %s", e)
 
     # Synchronous fallback — same logic as eos_fabric_health_summary
     result = await execute_on_devices(conn_mgr, hosts, _health_operation)
     output = result.to_response(action="fabric_health_async")
-
-    device_data = {}
-    for host, dev_result in result.successes.items():
-        if isinstance(dev_result, dict) and "data" in dev_result:
-            device_data[host] = dev_result["data"]
-        else:
-            device_data[host] = dev_result
-    output["results"] = device_data
-
+    output["results"] = _extract_device_data(result.successes)
     return output

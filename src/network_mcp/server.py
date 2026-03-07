@@ -513,7 +513,7 @@ if http_session_store is not None:
         except Exception:  # noqa: S110
             pass  # Status detection is best-effort
 
-        # Record into all active sessions (best-effort)
+        # Build record for session history tracking
         record = _ToolCallRecord(
             tool_name=name,
             arguments=arguments or {},
@@ -523,12 +523,9 @@ if http_session_store is not None:
             status=status,
         )
 
-        # Store in all active (non-expired) sessions
+        # Record into the most recently active non-expired session
         try:
-            for session_state in http_session_store._sessions.values():
-                if not session_state.is_expired:
-                    http_session_store.record_tool_call(session_state.session_id, record)
-                    break  # Record in the most recent active session only
+            http_session_store.record_to_most_recent(record)
         except Exception:  # noqa: S110
             pass  # Session tracking is best-effort
 

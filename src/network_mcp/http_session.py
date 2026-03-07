@@ -146,10 +146,33 @@ class HTTPSessionStore:
         """Get the tool call history for a session."""
         with self._lock:
             state = self._sessions.get(session_id)
-            if state is None or state.is_expired:
+            if state is None:
+                return []
+            if state.is_expired:
+                del self._sessions[session_id]
                 return []
             state.last_active = time.monotonic()
             return list(state.tool_history)
+
+    def record_to_most_recent(self, record: ToolCallRecord) -> bool:
+        """Record a tool call into the most recently active non-expired session.
+
+        Thread-safe: acquires the internal lock before iterating sessions.
+        Returns True if a session was found and the record was added.
+        """
+        with self._lock:
+            best: HTTPSessionState | None = None
+            for state in self._sessions.values():
+                if not state.is_expired:
+                    if best is None or state.last_active > best.last_active:
+                        best = state
+            if best is None:
+                return False
+            best.last_active = time.monotonic()
+            best.tool_history.append(record)
+            if len(best.tool_history) > self._max_history:
+                best.tool_history = best.tool_history[-self._max_history:]
+            return True
 
     def remove_session(self, session_id: str) -> bool:
         """Remove a session. Returns True if it existed."""

@@ -26,6 +26,7 @@ def net_session_create(metadata: str = "") -> dict:
     if http_session_store is None:
         return {
             "status": "error",
+            "feature": "http_sessions",
             "error": "HTTP session resumption is not enabled (set NET_HTTP_SESSION_RESUMPTION=true)",
         }
 
@@ -60,6 +61,7 @@ def net_session_resume(session_id: str) -> dict:
     if http_session_store is None:
         return {
             "status": "error",
+            "feature": "http_sessions",
             "error": "HTTP session resumption is not enabled (set NET_HTTP_SESSION_RESUMPTION=true)",
         }
 
@@ -67,6 +69,7 @@ def net_session_resume(session_id: str) -> dict:
     if state is None:
         return {
             "status": "error",
+            "feature": "http_sessions",
             "error": f"Session '{session_id}' not found or expired",
         }
 
@@ -90,6 +93,7 @@ def net_session_status(session_id: str = "") -> dict:
     if http_session_store is None:
         return {
             "status": "error",
+            "feature": "http_sessions",
             "error": "HTTP session resumption is not enabled (set NET_HTTP_SESSION_RESUMPTION=true)",
         }
 
@@ -98,6 +102,7 @@ def net_session_status(session_id: str = "") -> dict:
         if state is None:
             return {
                 "status": "error",
+                "feature": "http_sessions",
                 "error": f"Session '{session_id}' not found or expired",
             }
         return {
@@ -123,6 +128,7 @@ def net_session_end(session_id: str) -> dict:
     if http_session_store is None:
         return {
             "status": "error",
+            "feature": "http_sessions",
             "error": "HTTP session resumption is not enabled (set NET_HTTP_SESSION_RESUMPTION=true)",
         }
 
@@ -130,6 +136,7 @@ def net_session_end(session_id: str) -> dict:
     if not removed:
         return {
             "status": "error",
+            "feature": "http_sessions",
             "error": f"Session '{session_id}' not found",
         }
     return {
