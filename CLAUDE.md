@@ -1,12 +1,12 @@
 # CLAUDE.md — Network MCP Server
 
-Multi-vendor network MCP platform (v7.0.0) enabling AI assistants to interact with Arista EOS, Cisco IOS-XE, Cisco NX-OS, and Juniper JunOS devices. Wraps vendor APIs behind 261 MCP tools, 10 resources, and 15 prompt templates for Claude Desktop, Cursor, VS Code, etc.
+Multi-vendor network MCP platform (v8.0.0) enabling AI assistants to interact with Arista EOS, Cisco IOS-XE, Cisco NX-OS, Juniper JunOS, and SONiC devices. Wraps vendor APIs behind 297 MCP tools, 11 resources, and 16 prompt templates for Claude Desktop, Cursor, VS Code, etc.
 
 ## Stack
 
 Python 3.11+ | FastMCP (`mcp[cli]>=1.26,<2.0`) | pydantic v2 | pydantic-settings | tenacity | uv | ruff | pytest
 
-Vendor extras: pyeapi (Arista), httpx (Cisco), scrapli-netconf (Juniper), pygnmi (gNMI), anta (validation), pyjwt (auth)
+Vendor extras: pyeapi (Arista), httpx (Cisco, SONiC), scrapli-netconf (Juniper), pygnmi (gNMI), anta (validation), pyjwt (auth)
 
 ## Project Structure
 
@@ -34,14 +34,22 @@ src/network_mcp/
   schemas.py                  # Pydantic output models for structured output
   gnmi_connection.py          # gNMI connection wrapper (auto-detected)
   feature_flags.py            # Tenant-based feature targeting
+  http_session.py             # HTTP session resumption with TTL-based eviction
+  hints.py                    # Error remediation hints (12 categories)
+  templates.py                # Vendor-agnostic config template engine (17 intents)
+  sdk.py                      # Plugin SDK: MockDriverFactory, ToolTestHarness
+  playground.py               # Interactive REPL for tool testing
+  cli.py                      # Onboarding wizard (latticio init)
   mock_data/                  # Demo mode mock inventory and responses
-  integrations/               # NetBox, ServiceNow, Prometheus, Vault, Ansible
+  integrations/               # NetBox, ServiceNow, Prometheus, Vault, Ansible, Containerlab
+    containerlab.py           # Containerlab topology discovery and lifecycle management
   drivers/                    # Multi-vendor driver implementations
     base.py                   # NetworkDriver protocol (35 normalized getters)
-    __init__.py               # DRIVER_REGISTRY: eos, iosxe, nxos, junos
+    __init__.py               # DRIVER_REGISTRY: eos, iosxe, nxos, junos, sonic
     cisco_iosxe.py            # IosXeDriver (RESTCONF + SSH)
     cisco_nxos.py             # NxosDriver (NX-API + SSH)
     juniper_junos.py          # JunosDriver (NETCONF)
+    sonic.py                  # SonicDriver (REST API)
   tools/                      # Tool modules organized by function
     meta.py                   # Progressive discovery (5 tools)
     device.py                 # Device info, health, inventory (12 tools)
@@ -67,13 +75,19 @@ src/network_mcp/
     cloudvision.py            # CloudVision Portal (2 tools)
     export.py                 # Export as Markdown/CSV/JSON (2 tools)
     compliance.py             # CIS compliance (3 tools)
+    ai_fabric.py              # AI/ML fabric health: RoCEv2, ECN, PFC, GPU paths (5 tools)
+    http_sessions.py          # HTTP session management (4 tools)
     common/                   # 13 vendor-agnostic modules (net_* namespace, 70 tools)
     cisco/                    # Cisco-specific (nxos_*/iosxe_*, 9 tools)
     juniper/                  # JunOS-specific (junos_*, 7 tools)
-  resources/inventory.py      # 10 resources (net:// URIs)
-  prompts/workflows.py        # 15 prompt templates
+  resources/inventory.py      # 11 resources (net:// URIs)
+  prompts/workflows.py        # 16 prompt templates
 
-tests/                        # 8,422 tests, 92%+ coverage
+scripts/
+  generate_vendor_tools.py    # Auto-generate vendor tool stubs from NetworkDriver protocol
+
+tests/                        # 9,070 tests, 92%+ coverage
+  benchmarks/                 # Performance benchmark suite (connection pool, serialization, tool latency)
 ```
 
 ## Architecture
@@ -89,15 +103,15 @@ MCP Host (Claude/Cursor) --JSON-RPC--> server.py --drivers--> Network Devices
                        (eAPI)       (RESTCONF)     (NETCONF)
                            ▼              ▼              ▼
                       Arista EOS    Cisco IOS-XE   Juniper JunOS
-                                   Cisco NX-OS
-                                   (NxosDriver/NX-API)
+                                   Cisco NX-OS     SONiC
+                                   (NxosDriver)    (SonicDriver/REST)
 ```
 
 **Settings**: `NetworkSettings` in `config.py` (Pydantic BaseSettings). All settings use `NET_*` env var prefix.
 
 **Module loading**: Core modules always load. Optional modules (evpn_vxlan, security, vrf, bfd, event_monitor, qos, compliance) load conditionally via `NET_DISABLED_MODULES` / `NET_ENABLED_MODULES`. Vendor-specific tools load when their dependencies are installed. Progressive discovery mode (`NET_PROGRESSIVE_DISCOVERY=true`) defers all modules except meta and workflows.
 
-**Multi-vendor**: The `NetworkDriver` protocol defines 35 normalized getters. All 4 drivers implement this. `DRIVER_REGISTRY` maps platform strings to driver classes. Common tools in `tools/common/` use the registry for vendor-agnostic operations.
+**Multi-vendor**: The `NetworkDriver` protocol defines 35 normalized getters. All 5 drivers implement this (EOS, IOS-XE, NX-OS, JunOS, SONiC). `DRIVER_REGISTRY` maps platform strings to driver classes. Common tools in `tools/common/` use the registry for vendor-agnostic operations.
 
 **RBAC**: When `NET_RBAC_ENABLED=true`, tool calls are checked against JWT scope claims. Scopes: `network:read`, `network:write`, `network:admin`, `network:audit`.
 
@@ -211,6 +225,7 @@ Key settings (full list in `.env.example`):
 | `NET_READ_ONLY` | `true` | Block all write operations |
 | `NET_DEMO_MODE` | `false` | Use mock data (no real devices) |
 | `NET_PROGRESSIVE_DISCOVERY` | `false` | Deferred module loading |
+| `NET_VENDORS` | (all) | Selective vendor loading (e.g., `eos,iosxe`) |
 | `RATE_LIMIT_SHOW` | `5.0` | Show commands/sec per device |
 | `AUTH_ENABLED` | `false` | Enable OAuth 2.1/JWT auth |
 | `NET_RBAC_ENABLED` | `false` | Enable scope-based RBAC |

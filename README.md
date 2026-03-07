@@ -3,11 +3,11 @@
 [![PyPI version](https://img.shields.io/pypi/v/latticio.svg)](https://pypi.org/project/latticio/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-8%2C422%20passing-brightgreen)](tests/)
+[![Tests](https://img.shields.io/badge/tests-9%2C070%20passing-brightgreen)](tests/)
 [![Coverage](https://img.shields.io/badge/coverage-92%25-brightgreen)](tests/)
 [![MCP](https://img.shields.io/badge/MCP-compatible-green.svg)](https://modelcontextprotocol.io)
 
-**AI-powered multi-vendor network automation.** 261 purpose-built tools, 10 resources, and 15 prompt templates give AI assistants structured access to **Arista EOS**, **Cisco IOS-XE**, **Cisco NX-OS**, and **Juniper JunOS** devices — turning natural-language questions into real-time network queries, diagnostics, and configuration changes.
+**AI-powered multi-vendor network automation.** 297 purpose-built tools, 11 resources, and 16 prompt templates give AI assistants structured access to **Arista EOS**, **Cisco IOS-XE**, **Cisco NX-OS**, **Juniper JunOS**, and **SONiC** devices — turning natural-language questions into real-time network queries, diagnostics, and configuration changes.
 
 Works with **Claude Desktop**, **Claude Code**, **Cursor**, **VS Code Copilot**, and any MCP-compatible client.
 
@@ -19,8 +19,8 @@ Works with **Claude Desktop**, **Claude Code**, **Cursor**, **VS Code Copilot**,
 
 network-mcp lets any network engineer manage multi-vendor infrastructure through natural language. No scripting required.
 
-- **261 purpose-built tools** across 4 vendor platforms — the most comprehensive network MCP server available
-- **Multi-vendor by design** — one tool works across Arista, Cisco, and Juniper. Add a device, set the `platform` field, done.
+- **297 purpose-built tools** across 5 vendor platforms — the most comprehensive network MCP server available
+- **Multi-vendor by design** — one tool works across Arista, Cisco, Juniper, and SONiC. Add a device, set the `platform` field, done.
 - **Enterprise-grade** — RBAC, audit logging, OWASP MCP Top 10 compliance, mTLS, circuit breakers, OpenTelemetry
 - **Operational workflows** — not just "run show commands." Full troubleshooting, validation, change management, and drift detection
 - **5-minute setup** — `pip install latticio` and connect. Or try demo mode with zero configuration.
@@ -79,6 +79,7 @@ uv sync --extra dev
 ```bash
 pip install latticio[cisco]    # Cisco IOS-XE and NX-OS (httpx)
 pip install latticio[juniper]  # Juniper JunOS (scrapli-netconf)
+pip install latticio[sonic]    # SONiC NOS (httpx)
 pip install latticio[gnmi]     # gNMI telemetry (pygnmi)
 pip install latticio[anta]     # ANTA validation framework
 pip install latticio[all]      # Everything
@@ -179,8 +180,9 @@ AUTH_ENABLED=true AUTH_ISSUER_URL=https://auth.example.com \
 | Cisco | IOS-XE | `IosXeDriver` | RESTCONF / SSH | 73+ |
 | Cisco | NX-OS | `NxosDriver` | NX-API / SSH | 76+ |
 | Juniper | JunOS | `JunosDriver` | NETCONF | 77+ |
+| SONiC | SONiC | `SonicDriver` | REST API | 70+ |
 
-All four drivers implement the `NetworkDriver` protocol with 35 normalized getters. The 70 vendor-agnostic `net_*` tools work identically across all platforms.
+All five drivers implement the `NetworkDriver` protocol with 35 normalized getters. The 70 vendor-agnostic `net_*` tools work identically across all platforms.
 
 ## Architecture
 
@@ -202,7 +204,9 @@ MCP Client (Claude Desktop, Cursor, VS Code, Claude Code)
 │  │  Vendor-Specific Tools (16) — nxos/iosxe/junos_*     │  │
 │  │  NX-OS vPC/FEX, IOS-XE RESTCONF, JunOS NETCONF      │  │
 │  ├──────────────────────────────────────────────────────┤  │
-│  │  Resources (10) │ Prompts (15) │ Completions         │  │
+│  │  AI Fabric (5) │ Containerlab (5) │ HTTP Sessions (4)│  │
+│  ├──────────────────────────────────────────────────────┤  │
+│  │  Resources (11) │ Prompts (16) │ Completions         │  │
 │  ├──────────────────────────────────────────────────────┤  │
 │  │  Enterprise Layer                                    │  │
 │  │  Cache │ Circuit Breaker │ Rate Limiting │ Audit     │  │
@@ -212,11 +216,11 @@ MCP Client (Claude Desktop, Cursor, VS Code, Claude Code)
 │              NetworkDriver Protocol                        │
 │         ┌──────────┬──────────┬──────────┐                 │
 │         ▼          ▼          ▼          ▼                  │
-│    EosDriver  IosXeDriver NxosDriver JunosDriver           │
-│    (pyeapi)   (RESTCONF)  (NX-API)   (NETCONF)             │
-└─────┼──────────┼──────────┼──────────┼─────────────────────┘
-      ▼          ▼          ▼          ▼
-  Arista EOS  Cisco IOS-XE  Cisco NX-OS  Juniper JunOS
+│    EosDriver  IosXeDriver NxosDriver JunosDriver SonicDriver│
+│    (pyeapi)   (RESTCONF)  (NX-API)   (NETCONF)  (REST API) │
+└─────┼──────────┼──────────┼──────────┼──────────┼──────────┘
+      ▼          ▼          ▼          ▼          ▼
+  Arista EOS  Cisco IOS-XE  Cisco NX-OS  Juniper   SONiC
 ```
 
 ## Tool Overview
@@ -387,7 +391,7 @@ See [.env.example](.env.example) for the complete list (40+ settings).
 |----------|-------------|
 | [Roadmap](ROADMAP.md) | Project direction and planned features |
 | [Getting Started](docs/GETTING_STARTED.md) | 5-minute quickstart with example output |
-| [Tools Reference](docs/TOOLS.md) | All 261 tools with parameters |
+| [Tools Reference](docs/TOOLS.md) | All 297 tools with parameters |
 | [Architecture](docs/ARCHITECTURE.md) | Internal design and multi-tenancy |
 | [Deployment](docs/DEPLOYMENT.md) | Docker, Kubernetes, HTTP transport |
 | [Security](docs/SECURITY.md) | Auth, RBAC, OWASP compliance |

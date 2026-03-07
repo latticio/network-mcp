@@ -5,6 +5,41 @@ All notable changes to network-mcp will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [8.0.0] - 2026-03-07
+
+### Added
+
+#### Lab & Onboarding
+- **Containerlab integration** — first-class support for Containerlab topologies with 5 new tools: `net_containerlab_discover`, `net_containerlab_inventory`, `net_containerlab_deploy`, `net_containerlab_destroy`, `net_containerlab_status`. Auto-detects running labs, maps container images to platforms, and provides `ContainerlabInventoryBackend`
+- **Interactive onboarding CLI (`latticio init`)** — guided wizard that scaffolds `devices.yaml`, `.env`, and MCP client configs (Claude Desktop, Cursor, VS Code) in 4 steps
+- **Error messages with remediation hints** — 12 error categories with actionable fix suggestions (e.g., "check NET_USERNAME", "enable RESTCONF on device"). Pattern-based keyword matching for SSL, auth, timeout, and unsupported command errors
+
+#### AI Network Operations
+- **AI fabric tools** — 5 new tools for AI/ML training cluster fabric validation: `net_ai_fabric_health` (RoCEv2/RDMA readiness), `net_ai_fabric_ecn_status` (ECN marking/watermarks), `net_ai_fabric_pfc_status` (Priority Flow Control), `net_ai_fabric_rail_check` (rail-optimized topology), `net_ai_fabric_gpu_path` (GPU-to-GPU RDMA path validation)
+- **SONiC NOS driver** — new `SonicDriver` implementing `NetworkDriver` protocol with 35 normalized getters via REST API. Supports hyperscaler and AI data center fabrics
+
+#### Developer Experience
+- **Tool playground / REPL** — terminal-based REPL (`latticio playground` / `latticio repl`) for calling tools directly without an MCP client. Tab completion, argument parsing, pretty-printed results
+- **Plugin SDK with test harness** — `MockDriverFactory` for mock `NetworkDriver` instances, `ToolTestHarness` with assertion helpers (`assert_success`, `assert_error`, `assert_field`), `register_tools()` helper for plugin authors
+- **Vendor-agnostic config template engine** — 17 intent-based templates (VLAN, interface, routing, system) translated to vendor-specific CLI for EOS, IOS-XE, NX-OS, and JunOS via `render_commands()`
+- **Auto-generate vendor tools from protocol** — `scripts/generate_vendor_tools.py` derives tool stubs from `NetworkDriver` getter definitions, reducing boilerplate for multi-vendor support
+
+#### Cross-Vendor Improvements
+- **Selective vendor loading** — `NET_VENDORS` setting to lazy-load only needed driver modules; `NET_ENABLED_MODULES` allowlist and `NET_DISABLED_MODULES` blocklist for fine-grained module control
+- **5th vendor platform** — SONiC joins EOS, IOS-XE, NX-OS, and JunOS in the `DRIVER_REGISTRY`
+
+#### Infrastructure
+- **HTTP session resumption** — `HTTPSessionStore` for thread-safe session tracking with TTL-based eviction. 4 new tools: `net_session_create`, `net_session_resume`, `net_session_status`, `net_session_end`
+- **Performance benchmark suite** — 3 benchmark suites (connection pool throughput, serialization overhead, tool call latency) with `scripts/benchmark_report.py` for CI-published Markdown reports
+
+### Changed
+- Tool count increased from 261 to 297 (+36 tools)
+- Test count increased from 8,422 to 9,070 (+648 tests)
+- Resource count increased from 10 to 11
+- Prompt count increased from 15 to 16
+- Vendor count increased from 4 to 5 (added SONiC)
+- NetworkDriver protocol supported by 5 drivers (EOS, IOS-XE, NX-OS, JunOS, SONiC)
+
 ## [7.0.0] - 2026-03-01
 
 ### Added
