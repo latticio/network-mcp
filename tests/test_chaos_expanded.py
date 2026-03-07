@@ -9,6 +9,10 @@ Tests cover advanced failure scenarios beyond the base test_chaos.py suite:
 """
 
 import concurrent.futures
+
+import pytest
+
+pytestmark = pytest.mark.chaos
 import threading
 import time
 from unittest.mock import MagicMock, patch

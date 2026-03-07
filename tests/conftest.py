@@ -47,14 +47,24 @@ class _NodeSpec:
 
 def pytest_addoption(parser):
     parser.addoption("--run-integration", action="store_true", default=False, help="run integration tests")
+    parser.addoption("--run-chaos", action="store_true", default=False, help="run chaos/concurrency/stress tests")
+    parser.addoption("--run-slow", action="store_true", default=False, help="run slow tests (>1s each)")
 
 
 def pytest_collection_modifyitems(config, items):
+    skip_markers = []
     if not config.getoption("--run-integration", default=False):
-        skip_integration = pytest.mark.skip(reason="need --run-integration to run")
+        skip_markers.append(("integration", "need --run-integration to run"))
+    if not config.getoption("--run-chaos", default=False):
+        skip_markers.append(("chaos", "need --run-chaos to run"))
+    if not config.getoption("--run-slow", default=False):
+        skip_markers.append(("slow", "need --run-slow to run"))
+
+    for marker_name, reason in skip_markers:
+        skip = pytest.mark.skip(reason=reason)
         for item in items:
-            if "integration" in item.keywords:
-                item.add_marker(skip_integration)
+            if marker_name in item.keywords:
+                item.add_marker(skip)
 
 
 def make_test_settings(**overrides) -> NetworkSettings:

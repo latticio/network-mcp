@@ -56,7 +56,7 @@ otel = [
     "opentelemetry-exporter-prometheus>=0.45b0",
 ]
 all = ["latticio[arista,cisco,sonic,ssh,juniper,gnmi,anta,netbox,otel,redis]"]
-dev = ["pytest", "pytest-asyncio", "pytest-cov", "pytest-benchmark>=4.0", "hypothesis>=6.0", "ruff", "mypy", "bandit", "pip-audit", "pre-commit", "latticio[otel]"]
+dev = ["pytest", "pytest-asyncio", "pytest-cov", "pytest-xdist", "pytest-benchmark>=4.0", "hypothesis>=6.0", "ruff", "mypy", "bandit", "pip-audit", "pre-commit", "latticio[otel]"]
 
 [project.scripts]
 latticio = "network_mcp.cli:main"
@@ -85,10 +85,13 @@ select = ["E", "F", "I", "W", "B", "UP", "S"]
 testpaths = ["tests"]
 pythonpath = ["src"]
 asyncio_mode = "auto"
-addopts = "--benchmark-disable"
+# Fast iteration: pytest --lf (last failed only) | --ff (failed first) | --sw (stepwise)
+addopts = "--benchmark-disable -n auto"
 markers = [
     "benchmark: performance benchmarks (run with --benchmark-enable or --benchmark-only)",
     "integration: requires real network devices (skip by default)",
+    "chaos: chaos/concurrency/stress tests (skip by default, run with --run-chaos)",
+    "slow: tests that take >1s each (skip by default, run with --run-slow)",
 ]
 
 [tool.mypy]

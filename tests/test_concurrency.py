@@ -1,6 +1,10 @@
 """Concurrency and stress tests for connection pool, rate limiter, circuit breaker, and metrics."""
 
 import threading
+
+import pytest
+
+pytestmark = pytest.mark.chaos
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from unittest.mock import patch

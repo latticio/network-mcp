@@ -13,6 +13,10 @@ Tests the system's behavior under various failure conditions:
 """
 
 import concurrent.futures
+
+import pytest
+
+pytestmark = pytest.mark.chaos
 import random
 import threading
 import time

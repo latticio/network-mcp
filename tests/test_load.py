@@ -18,6 +18,10 @@ import tracemalloc
 from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
 
+import pytest
+
+pytestmark = pytest.mark.chaos
+
 from network_mcp.cache import CommandCache
 from network_mcp.circuit_breaker import CircuitBreakerRegistry
 from network_mcp.config import NetworkSettings

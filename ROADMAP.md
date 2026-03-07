@@ -37,7 +37,27 @@ Theme: **ecosystem expansion and topology intelligence**.
 - [ ] **Change impact analysis** — before pushing config, analyze affected devices and services based on topology and protocol adjacencies
 - [ ] **Multi-site topology visualization** — MCP resources that expose network maps for AI spatial reasoning
 
-### Integrations
+### AristaBuilder integration
+
+[AristaBuilder](docs/aristabuilder-integration/) is a companion visual topology design app. It connects to network-mcp as an MCP client to close the loop between design and operations. AristaBuilder is optional — network-mcp works standalone. These changes make network-mcp a better backend for design tools without adding complexity.
+
+See [docs/aristabuilder-integration/INTEGRATION-ARCHITECTURE.md](docs/aristabuilder-integration/INTEGRATION-ARCHITECTURE.md) for full architecture. See [docs/aristabuilder-integration/HANDOFF-TO-ARISTABUILDER.md](docs/aristabuilder-integration/HANDOFF-TO-ARISTABUILDER.md) for the AristaBuilder-side scope.
+
+#### Inline parameters for existing tools
+- [ ] **`net_check_drift` — add `golden_config: str` parameter** — accept intended config as a string instead of requiring a file or NetBox lookup. When provided, diff against the device's running config. This lets AristaBuilder send its generated EOS config directly for drift detection
+- [ ] **`eos_run_anta_tests` — add `catalog_yaml: str` parameter** — accept an ANTA test catalog as a YAML string instead of requiring a file path. AristaBuilder generates ANTA catalogs from topology and needs to run them inline
+
+#### New tools
+- [ ] **`net_build_topology_from_lldp`** — query LLDP neighbors on a list of devices and return a graph structure (`{nodes: [...], edges: [...]}`) representing discovered topology. Signature: `(hosts: list[str]) -> dict`. Useful for importing live topologies into design tools or validating cabling against intent
+
+#### Tool discovery enhancements
+- [ ] **Tool category metadata** — add `x-tool-group` annotation to all tools (e.g., `routing`, `switching`, `monitoring`, `config`, `validation`). Derived from existing module structure. Enables progressive discovery: clients call `net_discover_tools(category="routing")` to load tool groups on demand instead of receiving 297 tools at once
+- [ ] **Interface speed in LLDP response** — add link speed to `net_get_lldp_neighbors` output so clients can render edges with correct bandwidth
+
+#### Infrastructure
+- [ ] **`/health` endpoint** — simple health check for HTTP transport mode. Returns server version, uptime, connected device count, and module status. Used by AristaBuilder's Express backend to monitor the connection
+
+### Other integrations
 - [ ] **Nautobot integration** — source-of-truth support alongside NetBox for organizations using Nautobot
 - [ ] **Terraform state reader** — correlate Terraform-intended infrastructure with actual device state
 - [ ] **Git-backed config store** — automatic config versioning (like oxidized/rancid) with tools to diff any two points in time
