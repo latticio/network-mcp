@@ -12,6 +12,132 @@ logger = logging.getLogger("network-mcp")
 
 
 @mcp.tool(annotations=READ_ONLY)
+def net_build_topology_from_lldp(hosts: list[str]) -> dict:
+    """Build a network topology graph from LLDP neighbor data across multiple devices.
+
+    Queries LLDP neighbors on each host and assembles a graph with nodes (devices)
+    and edges (physical links). Duplicate links (A->B and B->A from separate queries)
+    are automatically merged into a single edge. Hosts that are unreachable or fail
+    are still included as nodes with an ``error`` field.
+
+    Args:
+        hosts: List of device hostnames, IPs, or inventory names to query.
+
+    Returns:
+        dict with keys:
+            - status: 'success'
+            - topology.nodes: list of node dicts (id, hostname, platform, management_ip,
+              and optionally error)
+            - topology.edges: list of edge dicts (source, target, source_port,
+              target_port, speed)
+    """
+    nodes: dict[str, dict] = {}  # host_id -> node dict
+    hostname_to_host_id: dict[str, str] = {}  # LLDP-reported hostname -> host_id
+    lldp_by_host: dict[str, dict[str, list[dict]] | None] = {}  # host_id -> LLDP data
+    speeds_by_host: dict[str, dict[str, int]] = {}  # host_id -> {interface: speed_mbps}
+
+    # First pass: connect to each host, collect facts + LLDP data
+    for host in hosts:
+        try:
+            driver = conn_mgr.get_driver(host)
+        except Exception as exc:
+            nodes[host] = {
+                "id": host,
+                "hostname": host,
+                "platform": "",
+                "management_ip": host,
+                "error": str(exc),
+            }
+            lldp_by_host[host] = None
+            continue
+
+        # Facts (best-effort: failure doesn't abort this host)
+        hostname = host
+        platform = ""
+        try:
+            facts = driver.get_facts()
+            hostname = facts.get("hostname", host)
+            platform = facts.get("platform", "")
+        except Exception:  # noqa: BLE001
+            logger.debug("get_facts failed for %s; using host as fallback hostname", host)
+
+        nodes[host] = {
+            "id": host,
+            "hostname": hostname,
+            "platform": platform,
+            "management_ip": host,
+        }
+        hostname_to_host_id[hostname] = host
+
+        # Interface speeds (best-effort)
+        try:
+            ifaces = driver.get_interfaces()
+            speeds_by_host[host] = {name: data.get("speed", 0) for name, data in ifaces.items()}
+        except Exception:
+            speeds_by_host[host] = {}
+
+        # LLDP neighbors (failure marks this host with error but keeps the node)
+        try:
+            lldp_by_host[host] = driver.get_lldp_neighbors()
+        except Exception as exc:
+            lldp_by_host[host] = None
+            nodes[host]["error"] = str(exc)
+
+    # Second pass: build edges, deduplicating symmetric A->B / B->A links
+    edges: list[dict] = []
+    seen_edge_keys: set[frozenset] = set()
+
+    for host, neighbors_by_port in lldp_by_host.items():
+        if neighbors_by_port is None:
+            continue
+
+        speeds = speeds_by_host.get(host, {})
+
+        for local_port, neighbor_list in neighbors_by_port.items():
+            for neighbor in neighbor_list:
+                remote_hostname = neighbor.get("hostname", "")
+                remote_port = neighbor.get("port", "")
+
+                # Resolve remote hostname to a known host_id when possible
+                remote_id = hostname_to_host_id.get(remote_hostname, remote_hostname)
+
+                speed = speeds.get(local_port, 0)
+
+                # Canonical key: frozenset deduplicates A->B and B->A
+                edge_key: frozenset = frozenset([(host, local_port), (remote_id, remote_port)])
+                if edge_key in seen_edge_keys:
+                    continue
+                seen_edge_keys.add(edge_key)
+
+                edges.append(
+                    {
+                        "source": host,
+                        "target": remote_id,
+                        "source_port": local_port,
+                        "target_port": remote_port,
+                        "speed": speed,
+                    }
+                )
+
+                # Add a placeholder node for neighbours not in the queried hosts list
+                if remote_id not in nodes:
+                    nodes[remote_id] = {
+                        "id": remote_id,
+                        "hostname": remote_hostname,
+                        "platform": "",
+                        "management_ip": "",
+                    }
+
+    return {
+        "status": "success",
+        "topology": {
+            "nodes": list(nodes.values()),
+            "edges": edges,
+        },
+    }
+
+
+@mcp.tool(annotations=READ_ONLY)
 @handle_tool_errors
 def net_get_lldp_neighbors(host: str) -> dict:
     """Get LLDP neighbor information from any supported network device.

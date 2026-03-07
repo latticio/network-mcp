@@ -320,6 +320,8 @@ _MULTI_DEVICE_TOOLS = {
     "net_get_grafana_dashboard",
     # Drift report (multi-device, takes hosts list)
     "net_drift_report",
+    # Topology builder (multi-device, takes hosts list)
+    "net_build_topology_from_lldp",
     # HTTP session tools (no host parameter — session management, not device ops)
     "net_session_create",
     "net_session_resume",
