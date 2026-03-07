@@ -341,6 +341,34 @@ class NetworkSettings(PlatformSettings):
         description="Maximum concurrent sessions per user",
     )
 
+    # HTTP session resumption (session state persistence for client reconnection)
+    net_http_session_resumption: bool = Field(
+        default=True,
+        validation_alias=AliasChoices("NET_HTTP_SESSION_RESUMPTION"),
+        description="Enable HTTP session state persistence for transport session resumption",
+    )
+    net_http_session_ttl: int = Field(
+        default=3600,
+        ge=60,
+        le=86400,
+        validation_alias=AliasChoices("NET_HTTP_SESSION_TTL"),
+        description="HTTP session state TTL in seconds (default: 1 hour)",
+    )
+    net_http_session_max: int = Field(
+        default=1000,
+        ge=10,
+        le=10000,
+        validation_alias=AliasChoices("NET_HTTP_SESSION_MAX"),
+        description="Maximum concurrent HTTP sessions tracked",
+    )
+    net_http_session_max_history: int = Field(
+        default=100,
+        ge=10,
+        le=1000,
+        validation_alias=AliasChoices("NET_HTTP_SESSION_MAX_HISTORY"),
+        description="Maximum tool call history entries per HTTP session",
+    )
+
     # Cache settings
     net_cache_enabled: bool = Field(
         default=True,

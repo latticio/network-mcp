@@ -213,6 +213,25 @@ if settings.net_demo_mode:
 elif _inventory_backend is not None:
     logger.info(f"Loaded inventory: {len(conn_mgr._inventory)} devices")
 
+# --- HTTP session resumption state store ---
+# Module-level store for HTTP session state persistence. Initialized when
+# NET_HTTP_SESSION_RESUMPTION=true (default). Tools and wrappers import this.
+http_session_store = None
+if settings.net_http_session_resumption:
+    from .http_session import HTTPSessionStore
+
+    http_session_store = HTTPSessionStore(
+        ttl_seconds=settings.net_http_session_ttl,
+        max_sessions=settings.net_http_session_max,
+        max_history_per_session=settings.net_http_session_max_history,
+    )
+    logger.info(
+        "HTTP session resumption enabled (ttl=%ds, max=%d, history=%d)",
+        settings.net_http_session_ttl,
+        settings.net_http_session_max,
+        settings.net_http_session_max_history,
+    )
+
 # --- Tenant isolation filter ---
 # Built from the inventory so TenantDeviceFilter can map device names to allowed tenants.
 _tenant_filter = None
@@ -349,6 +368,13 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
             _leader_elector.stop_renewal()
             logger.debug("Leader elector stopped")
 
+        # Clean up HTTP session store
+        if http_session_store is not None:
+            cleaned = http_session_store.cleanup_expired()
+            remaining = http_session_store.session_count
+            if cleaned or remaining:
+                logger.debug("HTTP session store: cleaned %d expired, %d remaining", cleaned, remaining)
+
         # Shut down OTel providers if they were initialized
         if settings.net_otel_enabled:
             from .telemetry import shutdown as otel_shutdown
@@ -451,6 +477,65 @@ if settings.rbac_enabled and settings.auth_enabled:
 
     mcp.call_tool = _rbac_call_tool  # type: ignore[assignment]
     logger.info("RBAC enabled — tool access controlled by JWT scope claims")
+
+
+# --- HTTP session tracking (records tool calls per active session) ---
+# Wraps call_tool to automatically record tool calls into tracked sessions.
+# Works with or without RBAC — chains onto whatever call_tool is currently set.
+if http_session_store is not None:
+    from .http_session import ToolCallRecord as _ToolCallRecord
+
+    _tracked_call_tool = mcp.call_tool
+
+    async def _session_tracking_call_tool(name, arguments):  # type: ignore[no-untyped-def]
+        """Wrapper that records tool calls into HTTP sessions for resumption."""
+        import time as _time
+
+        start = _time.monotonic()
+        result = await _tracked_call_tool(name, arguments)
+        duration_ms = (_time.monotonic() - start) * 1000
+
+        # Extract result summary (truncate to avoid storing large payloads)
+        try:
+            if isinstance(result, list) and result:
+                text = getattr(result[0], "text", "")
+                summary = text[:500] if text else ""
+            else:
+                summary = str(result)[:500]
+        except Exception:
+            summary = ""
+
+        # Determine status from result
+        status = "success"
+        try:
+            if summary and '"status": "error"' in summary:
+                status = "error"
+        except Exception:  # noqa: S110
+            pass  # Status detection is best-effort
+
+        # Record into all active sessions (best-effort)
+        record = _ToolCallRecord(
+            tool_name=name,
+            arguments=arguments or {},
+            result_summary=summary,
+            timestamp=_time.time(),
+            duration_ms=duration_ms,
+            status=status,
+        )
+
+        # Store in all active (non-expired) sessions
+        try:
+            for session_state in http_session_store._sessions.values():
+                if not session_state.is_expired:
+                    http_session_store.record_tool_call(session_state.session_id, record)
+                    break  # Record in the most recent active session only
+        except Exception:  # noqa: S110
+            pass  # Session tracking is best-effort
+
+        return result
+
+    mcp.call_tool = _session_tracking_call_tool  # type: ignore[assignment]
+    logger.info("HTTP session tracking enabled — tool calls recorded for session resumption")
 
 
 # --- Vendor dependency availability flags ---
@@ -710,6 +795,10 @@ else:
 # API key admin tools — loaded only when NET_API_KEY_ENABLED=true
 if settings.api_key_enabled:
     _load_module("admin", ".tools.admin")
+
+# HTTP session management tools — loaded when session resumption is enabled
+if http_session_store is not None:
+    _load_module("http_sessions", ".tools.http_sessions")
 
 # Cisco-specific tools — loaded only when httpx is installed (cisco extra) and
 # at least one Cisco platform (iosxe or nxos) is included in NET_VENDORS.

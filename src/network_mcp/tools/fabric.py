@@ -186,12 +186,15 @@ def eos_list_inventory(
 
 
 @mcp.tool(annotations=READ_ONLY)
-async def eos_fabric_health_summary(targets: str = "all") -> dict:
+async def eos_fabric_health_summary(targets: str = "all", ctx: Context | None = None) -> dict:
     """Get health summary across multiple devices: version, memory, temperature, fans, power.
+
+    Sends progress notifications as each device completes when the client supports it.
 
     Args:
         targets: Devices to query — "all", "group:<name>", "tag:<value>",
                  "role:<value>", or comma-separated hostnames.
+        ctx: MCP Context (injected by FastMCP) for progress notifications.
     """
     hosts = resolve_hosts(conn_mgr, targets)
     if not hosts:
@@ -202,7 +205,7 @@ async def eos_fabric_health_summary(targets: str = "all") -> dict:
     if len(hosts) > MAX_DEVICES:
         return {"status": "error", "error": f"Too many devices ({len(hosts)}). Maximum is {MAX_DEVICES}."}
 
-    result = await execute_on_devices(conn_mgr, hosts, _health_operation)
+    result = await execute_on_devices(conn_mgr, hosts, _health_operation, ctx=ctx)
     output = result.to_response(action="fabric_health")
 
     # Extract per-device data for cleaner summary
@@ -218,12 +221,15 @@ async def eos_fabric_health_summary(targets: str = "all") -> dict:
 
 
 @mcp.tool(annotations=READ_ONLY)
-async def eos_fabric_bgp_status(targets: str = "all") -> dict:
+async def eos_fabric_bgp_status(targets: str = "all", ctx: Context | None = None) -> dict:
     """Get BGP status across multiple devices with aggregate established/down counts.
+
+    Sends progress notifications as each device completes when the client supports it.
 
     Args:
         targets: Devices to query — "all", "group:<name>", "tag:<value>",
                  "role:<value>", or comma-separated hostnames.
+        ctx: MCP Context (injected by FastMCP) for progress notifications.
     """
     hosts = resolve_hosts(conn_mgr, targets)
     if not hosts:
@@ -234,7 +240,7 @@ async def eos_fabric_bgp_status(targets: str = "all") -> dict:
     if len(hosts) > MAX_DEVICES:
         return {"status": "error", "error": f"Too many devices ({len(hosts)}). Maximum is {MAX_DEVICES}."}
 
-    result = await execute_on_devices(conn_mgr, hosts, _bgp_operation)
+    result = await execute_on_devices(conn_mgr, hosts, _bgp_operation, ctx=ctx)
     output = result.to_response(action="fabric_bgp_status")
 
     # Build per-device data and aggregate counts
@@ -258,12 +264,15 @@ async def eos_fabric_bgp_status(targets: str = "all") -> dict:
 
 
 @mcp.tool(annotations=READ_ONLY)
-async def eos_fabric_mlag_status(targets: str = "all") -> dict:
+async def eos_fabric_mlag_status(targets: str = "all", ctx: Context | None = None) -> dict:
     """Get MLAG status across multiple devices with aggregate health.
+
+    Sends progress notifications as each device completes when the client supports it.
 
     Args:
         targets: Devices to query — "all", "group:<name>", "tag:<value>",
                  "role:<value>", or comma-separated hostnames.
+        ctx: MCP Context (injected by FastMCP) for progress notifications.
     """
     hosts = resolve_hosts(conn_mgr, targets)
     if not hosts:
@@ -274,7 +283,7 @@ async def eos_fabric_mlag_status(targets: str = "all") -> dict:
     if len(hosts) > MAX_DEVICES:
         return {"status": "error", "error": f"Too many devices ({len(hosts)}). Maximum is {MAX_DEVICES}."}
 
-    result = await execute_on_devices(conn_mgr, hosts, _mlag_operation)
+    result = await execute_on_devices(conn_mgr, hosts, _mlag_operation, ctx=ctx)
     output = result.to_response(action="fabric_mlag_status")
 
     # Build per-device data and aggregate
@@ -300,12 +309,15 @@ async def eos_fabric_mlag_status(targets: str = "all") -> dict:
 
 
 @mcp.tool(annotations=READ_ONLY)
-async def eos_compare_configs(devices: list[str], section: str | None = None) -> dict:
+async def eos_compare_configs(devices: list[str], section: str | None = None, ctx: Context | None = None) -> dict:
     """Get running config from multiple devices for side-by-side comparison.
+
+    Sends progress notifications as each device completes when the client supports it.
 
     Args:
         devices: List of device hostnames, IPs, or inventory names.
         section: Optional config section to compare (e.g. "router bgp", "interface Ethernet1").
+        ctx: MCP Context (injected by FastMCP) for progress notifications.
     """
     if not devices:
         return {"status": "error", "error": "At least one device must be specified"}
@@ -317,7 +329,7 @@ async def eos_compare_configs(devices: list[str], section: str | None = None) ->
         if section_err:
             return {"status": "error", "error": section_err}
 
-    result = await execute_on_devices(conn_mgr, devices, _config_operation, section)
+    result = await execute_on_devices(conn_mgr, devices, _config_operation, section, ctx=ctx)
     output = result.to_response(action="compare_configs")
 
     # Extract config text per device
