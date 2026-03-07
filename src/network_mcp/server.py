@@ -639,6 +639,7 @@ _COMMON_TOOL_MODULES = [
     "routing",
     "security",
     "switching",
+    "topology",
     "troubleshoot",
     "vlans",
     "vrf",

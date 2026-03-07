@@ -851,6 +851,7 @@ dependencies = [
 [package.optional-dependencies]
 all = [
     { name = "anta" },
+    { name = "defusedxml" },
     { name = "httpx" },
     { name = "opentelemetry-api" },
     { name = "opentelemetry-exporter-otlp-proto-grpc" },
@@ -873,6 +874,7 @@ auth = [
     { name = "pyjwt" },
 ]
 cisco = [
+    { name = "defusedxml" },
     { name = "httpx" },
 ]
 dev = [
@@ -932,6 +934,7 @@ requires-dist = [
     { name = "anta", marker = "extra == 'anta'", specifier = ">=1.0.0" },
     { name = "bandit", marker = "extra == 'dev'" },
     { name = "cryptography", marker = "extra == 'mtls'", specifier = ">=42.0" },
+    { name = "defusedxml", marker = "extra == 'cisco'", specifier = ">=0.7" },
     { name = "httpx", marker = "extra == 'cisco'", specifier = ">=0.27" },
     { name = "httpx", marker = "extra == 'sonic'", specifier = ">=0.27" },
     { name = "hvac", marker = "extra == 'vault'", specifier = ">=2.0,<3.0" },
