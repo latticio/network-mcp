@@ -634,6 +634,9 @@ class PanosDriver:
     def get_copp_policy(self) -> dict:
         raise NotSupportedError("get_copp_policy is not supported on PAN-OS")
 
+    def get_firewall_policies(self) -> list[dict]:
+        raise NotSupportedError("get_firewall_policies is not yet implemented for PAN-OS — use XML API directly")
+
     def capabilities(self) -> dict[str, bool]:
         """Return supported features and getter availability for PAN-OS."""
         return {
@@ -675,4 +678,5 @@ class PanosDriver:
             "ping": False,
             "traceroute": False,
             "get_interface_flaps": False,
+            "get_firewall_policies": False,
         }

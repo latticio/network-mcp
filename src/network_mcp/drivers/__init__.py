@@ -61,7 +61,7 @@ try:
 
     DRIVER_REGISTRY["panos"] = PanosDriver  # type: ignore[assignment]
 except ImportError:
-    logger.debug("PAN-OS driver not available (install 'cisco' extra for httpx support)")
+    logger.debug("PAN-OS driver not available (install 'cisco' extra for httpx and defusedxml support)")
 
 # Conditionally register FortiOS driver when httpx is available (cisco or sonic extra)
 try:
@@ -75,8 +75,6 @@ __all__ = [
     "DRIVER_REGISTRY",
     "DeviceDriver",
     "EosDriver",
-    "FortiosDriver",
     "NetworkDriver",
     "NotSupportedError",
-    "PanosDriver",
 ]

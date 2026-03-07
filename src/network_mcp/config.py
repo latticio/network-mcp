@@ -28,7 +28,7 @@ class Platform(StrEnum):
 
     Used for driver auto-selection in the DRIVER_REGISTRY.
     All platforms have production-ready drivers: EOS (pyeapi), IOS-XE (RESTCONF),
-    NX-OS (NX-API), and JunOS (NETCONF).
+    NX-OS (NX-API), JunOS (NETCONF), SONiC (REST API), PAN-OS (XML API), and FortiOS (REST API).
     """
 
     EOS = "eos"

@@ -661,3 +661,6 @@ class SonicDriver:
 
     def get_copp_policy(self) -> dict:
         raise NotSupportedError("get_copp_policy is not yet implemented for SONiC")
+
+    def get_firewall_policies(self) -> list[dict]:
+        raise NotSupportedError("get_firewall_policies is not supported on SONiC")

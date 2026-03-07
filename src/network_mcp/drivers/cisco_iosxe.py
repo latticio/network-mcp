@@ -2138,6 +2138,9 @@ class IosXeDriver:
         """Get Control Plane Policing policy configuration and stats."""
         raise NotSupportedError(f"get_copp_policy is not supported on {self.platform}")
 
+    def get_firewall_policies(self) -> list[dict]:
+        raise NotSupportedError(f"get_firewall_policies is not supported on {self.platform}")
+
 
 # --- Helper functions ---
 
