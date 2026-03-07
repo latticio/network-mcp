@@ -42,8 +42,8 @@ class TestPlatformEnum:
         assert str(Platform.EOS) == "eos"
         assert f"platform={Platform.NXOS}" == "platform=nxos"
 
-    def test_platform_has_six_members(self):
-        assert len(Platform) == 6
+    def test_platform_has_seven_members(self):
+        assert len(Platform) == 7
 
 
 # --- DRIVER_REGISTRY tests ---

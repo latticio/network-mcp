@@ -37,6 +37,7 @@ class Platform(StrEnum):
     JUNOS = "junos"
     SONIC = "sonic"
     PANOS = "panos"
+    FORTIOS = "fortios"
 
 
 class PlatformSettings(BaseSettings):
@@ -548,6 +549,13 @@ class NetworkSettings(PlatformSettings):
         description="PAN-OS XML API key for authentication (alternative to username/password)",
     )
 
+    # Fortinet FortiOS settings
+    net_fortios_api_key: SecretStr | None = Field(
+        default=None,
+        validation_alias=AliasChoices("NET_FORTIOS_API_KEY"),
+        description="FortiOS REST API key for Bearer token authentication",
+    )
+
     # CloudVision Portal settings
     eos_cvp_url: str | None = None  # CVP URL (e.g., https://cvp.example.com)
     eos_cvp_token: SecretStr | None = None  # CVP service account token
@@ -732,7 +740,7 @@ class NetworkSettings(PlatformSettings):
     _KNOWN_OPTIONAL_MODULES: ClassVar[frozenset[str]] = frozenset(
         {"evpn_vxlan", "security", "vrf", "bfd", "event_monitor", "qos", "compliance"}
     )
-    _KNOWN_VENDORS: ClassVar[frozenset[str]] = frozenset({"eos", "iosxe", "nxos", "junos", "sonic", "panos"})
+    _KNOWN_VENDORS: ClassVar[frozenset[str]] = frozenset({"eos", "iosxe", "nxos", "junos", "sonic", "panos", "fortios"})
 
     @model_validator(mode="after")
     def _validate_module_names(self) -> "NetworkSettings":
@@ -830,6 +838,7 @@ _SECRET_FIELDS: frozenset[str] = frozenset(
         "audit_signing_key",
         "vault_token",
         "net_panos_api_key",
+        "net_fortios_api_key",
     }
 )
 

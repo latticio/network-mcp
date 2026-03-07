@@ -63,4 +63,20 @@ try:
 except ImportError:
     logger.debug("PAN-OS driver not available (install 'cisco' extra for httpx support)")
 
-__all__ = ["DRIVER_REGISTRY", "DeviceDriver", "EosDriver", "NetworkDriver", "NotSupportedError", "PanosDriver"]
+# Conditionally register FortiOS driver when httpx is available (cisco or sonic extra)
+try:
+    from network_mcp.drivers.fortinet_fortios import FortiosDriver
+
+    DRIVER_REGISTRY["fortios"] = FortiosDriver  # type: ignore[assignment]
+except ImportError:
+    logger.debug("FortiOS driver not available (install 'cisco' extra for httpx support)")
+
+__all__ = [
+    "DRIVER_REGISTRY",
+    "DeviceDriver",
+    "EosDriver",
+    "FortiosDriver",
+    "NetworkDriver",
+    "NotSupportedError",
+    "PanosDriver",
+]

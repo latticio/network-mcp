@@ -2545,3 +2545,7 @@ class JunosDriver:
     def get_copp_policy(self) -> dict:
         """Get Control Plane Policing policy configuration and stats."""
         raise NotSupportedError(f"get_copp_policy is not supported on {self.platform}")
+
+    def get_firewall_policies(self) -> list[dict]:
+        """Get firewall policies — not applicable to JunOS routing platforms."""
+        raise NotSupportedError(f"get_firewall_policies is not supported on {self.platform}")

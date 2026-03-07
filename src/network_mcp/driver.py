@@ -1337,3 +1337,9 @@ class EosDriver(DeviceDriver):
         from network_mcp.drivers.base import NotSupportedError
 
         raise NotSupportedError(f"get_copp_policy is not supported on {self.platform}")
+
+    def get_firewall_policies(self) -> list[dict]:
+        """Get firewall policies — not applicable to Arista EOS routing/switching platforms."""
+        from network_mcp.drivers.base import NotSupportedError
+
+        raise NotSupportedError(f"get_firewall_policies is not supported on {self.platform}")

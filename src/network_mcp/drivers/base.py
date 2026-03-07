@@ -615,6 +615,29 @@ class NetworkDriver(Protocol):
         """
         ...
 
+    def get_firewall_policies(self) -> list[dict]:
+        """Get firewall policies from the device.
+
+        Returns firewall/security policy rules. Primarily implemented by
+        firewall platforms (FortiOS, PAN-OS). Most switch/router drivers
+        will raise NotSupportedError.
+
+        Returns:
+            list of dicts, each with keys:
+                - policy_id (int): Policy sequence number
+                - name (str): Policy name
+                - action (str): 'accept', 'deny', or vendor-specific action
+                - status (str): Policy status ('enable' or 'disable')
+                - srcintf (list[str]): Source interface names
+                - dstintf (list[str]): Destination interface names
+                - srcaddr (list[str]): Source address object names
+                - dstaddr (list[str]): Destination address object names
+                - service (list[str]): Service object names
+                - nat (bool): Whether NAT is enabled
+                - comments (str): Policy comments
+        """
+        raise NotSupportedError("get_firewall_policies is not supported on this platform")
+
     # --- Capability & connection health ---
 
     def capabilities(self) -> dict[str, bool]:
