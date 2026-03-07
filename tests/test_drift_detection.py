@@ -745,6 +745,47 @@ class TestNetCheckDrift:
             result = drift.net_check_drift("spine-01", golden_source="file")
         assert result["status"] == "not_supported"
 
+    def test_check_drift_golden_config_provided(self, mock_driver_conn_mgr):
+        """golden_config provided — diffs against it directly, golden_source is ignored."""
+        mock_driver_conn_mgr.get_config.return_value = {"running": GOLDEN_CONFIG, "startup": GOLDEN_CONFIG}
+
+        from network_mcp.tools.common import drift
+
+        # Pass an invalid golden_source to prove it is ignored when golden_config is set
+        with patch.object(drift, "_detector", _make_detector()):
+            result = drift.net_check_drift("spine-01", golden_source="invalid", golden_config=RUNNING_CONFIG_WITH_DRIFT)
+        assert result["status"] == "success"
+        # GOLDEN_CONFIG (running) vs RUNNING_CONFIG_WITH_DRIFT (golden) → drift detected
+        assert result["data"]["has_drift"] is True
+
+    def test_check_drift_golden_config_none_falls_back(self, mock_driver_conn_mgr, tmp_path):
+        """golden_config=None falls back to existing golden_source behavior."""
+        config_dir = tmp_path / "golden"
+        config_dir.mkdir()
+        (config_dir / "spine-01.conf").write_text(GOLDEN_CONFIG)
+
+        mock_driver_conn_mgr.get_config.return_value = {"running": GOLDEN_CONFIG, "startup": GOLDEN_CONFIG}
+
+        from network_mcp.tools.common import drift
+
+        detector = DriftDetector(_make_settings(net_golden_config_dir=str(config_dir)))
+        with patch.object(drift, "_detector", detector):
+            result = drift.net_check_drift("spine-01", golden_source="file", golden_config=None)
+        assert result["status"] == "success"
+        assert result["data"]["has_drift"] is False
+
+    def test_check_drift_golden_config_no_drift(self, mock_driver_conn_mgr):
+        """golden_config provided with identical config returns empty diff."""
+        mock_driver_conn_mgr.get_config.return_value = {"running": GOLDEN_CONFIG, "startup": GOLDEN_CONFIG}
+
+        from network_mcp.tools.common import drift
+
+        with patch.object(drift, "_detector", _make_detector()):
+            result = drift.net_check_drift("spine-01", golden_config=GOLDEN_CONFIG)
+        assert result["status"] == "success"
+        assert result["data"]["has_drift"] is False
+        assert result["data"]["report"]["total_drifts"] == 0
+
 
 # ---------------------------------------------------------------------------
 # MCP Tool tests — net_drift_report

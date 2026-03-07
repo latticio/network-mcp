@@ -65,7 +65,7 @@ _VALID_SEVERITIES = ("critical", "warning", "info")
 
 @mcp.tool(annotations=READ_ONLY)
 @handle_tool_errors
-def net_check_drift(host: str, golden_source: str = "file") -> dict:
+def net_check_drift(host: str, golden_source: str = "file", golden_config: str | None = None) -> dict:
     """Check configuration drift on any vendor device against golden config.
 
     Compares running configuration with a golden intended-state config.
@@ -79,39 +79,46 @@ def net_check_drift(host: str, golden_source: str = "file") -> dict:
     Golden config sources:
       - file: Reads from NET_GOLDEN_CONFIG_DIR/{hostname}.conf
       - netbox: Fetches config context from NetBox (requires NETBOX_URL/TOKEN)
+      - inline: Provide golden_config directly as a raw config string (golden_source is ignored)
 
     Args:
         host: Device hostname, IP, or inventory name.
-        golden_source: Source of golden config ("file" or "netbox").
+        golden_source: Source of golden config ("file" or "netbox"). Ignored when golden_config is set.
+        golden_config: Raw config string to use as the intended state. When provided, golden_source is ignored.
     """
     host_err = validate_host(host)
     if host_err:
         return {"status": "error", "device": host, "error": host_err}
 
-    if golden_source not in _VALID_SOURCES:
-        return {
-            "status": "error",
-            "device": host,
-            "error": f"Invalid golden_source '{golden_source}'. Must be one of: {_VALID_SOURCES}",
-        }
-
     detector = _get_detector()
 
-    # Load golden config
-    golden_config = detector.load_golden_config(host, source=golden_source)
-    if golden_config is None:
-        return {
-            "status": "error",
-            "device": host,
-            "error": (
-                f"Golden config not found for device '{host}' from source '{golden_source}'. "
-                + (
-                    f"Ensure NET_GOLDEN_CONFIG_DIR is set and contains {host}.conf"
-                    if golden_source == "file"
-                    else "Check NetBox configuration."
-                )
-            ),
-        }
+    if golden_config is not None:
+        # Use inline config directly — golden_source is ignored
+        golden_str = golden_config
+    else:
+        if golden_source not in _VALID_SOURCES:
+            return {
+                "status": "error",
+                "device": host,
+                "error": f"Invalid golden_source '{golden_source}'. Must be one of: {_VALID_SOURCES}",
+            }
+
+        # Load golden config from file or netbox
+        loaded = detector.load_golden_config(host, source=golden_source)
+        if loaded is None:
+            return {
+                "status": "error",
+                "device": host,
+                "error": (
+                    f"Golden config not found for device '{host}' from source '{golden_source}'. "
+                    + (
+                        f"Ensure NET_GOLDEN_CONFIG_DIR is set and contains {host}.conf"
+                        if golden_source == "file"
+                        else "Check NetBox configuration."
+                    )
+                ),
+            }
+        golden_str = loaded
 
     # Fetch running config
     running_config, err = _get_running_config(host)
@@ -120,7 +127,7 @@ def net_check_drift(host: str, golden_source: str = "file") -> dict:
 
     # Sanitize before comparison to avoid false diffs on credential formatting
     running_sanitized = config_sanitizer.sanitize(running_config)
-    golden_sanitized = config_sanitizer.sanitize(golden_config)
+    golden_sanitized = config_sanitizer.sanitize(golden_str)
 
     report = detector.detect_drift(host, running_sanitized, golden_sanitized)
 
