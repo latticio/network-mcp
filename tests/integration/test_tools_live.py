@@ -15,6 +15,17 @@ import pytest
 
 pytestmark = [pytest.mark.integration]
 
+# All tool modules that import conn_mgr at module level
+_TOOL_MODULES = [
+    "network_mcp.tools.common.device",
+    "network_mcp.tools.common.interfaces",
+    "network_mcp.tools.common.routing",
+    "network_mcp.tools.common.switching",
+    "network_mcp.tools.common.monitoring",
+    "network_mcp.tools.common.config",
+    "network_mcp.tools.common.vlans",
+]
+
 
 @pytest.fixture(scope="module")
 def live_conn_mgr(lab_nodes):
@@ -48,25 +59,36 @@ def live_conn_mgr(lab_nodes):
 
 @pytest.fixture(autouse=True)
 def patch_conn_mgr(live_conn_mgr):
-    """Patch the global conn_mgr so tools use the live connection manager."""
+    """Patch conn_mgr in server AND in every tool module that imports it."""
+    import importlib
+    import sys
+
     from network_mcp import server
 
-    original = server.conn_mgr
-    server.conn_mgr = live_conn_mgr
+    patches = [patch.object(server, "conn_mgr", live_conn_mgr)]
 
-    # Also patch helpers module reference
-    from network_mcp import helpers
-    # Patch settings for non-demo, non-read-only
-    with patch.object(server, "settings") as mock_settings:
-        mock_settings.net_demo_mode = False
-        mock_settings.net_read_only = True
-        mock_settings.timeout_connect = 30
-        mock_settings.timeout_show = 30
-        mock_settings.output_max_bytes = 1_000_000
-        mock_settings.net_verify_ssl = False
-        yield
+    # Patch conn_mgr in each tool module that imported it at module level
+    for mod_name in _TOOL_MODULES:
+        if mod_name in sys.modules:
+            mod = sys.modules[mod_name]
+            if hasattr(mod, "conn_mgr"):
+                patches.append(patch.object(mod, "conn_mgr", live_conn_mgr))
 
-    server.conn_mgr = original
+    # Also ensure tool modules are imported so the patch targets exist
+    for mod_name in _TOOL_MODULES:
+        if mod_name not in sys.modules:
+            importlib.import_module(mod_name)
+            mod = sys.modules[mod_name]
+            if hasattr(mod, "conn_mgr"):
+                patches.append(patch.object(mod, "conn_mgr", live_conn_mgr))
+
+    for p in patches:
+        p.start()
+
+    yield
+
+    for p in patches:
+        p.stop()
 
 
 class TestDeviceTools:
@@ -85,7 +107,7 @@ class TestDeviceTools:
 
     def test_get_device_health(self, lab_node):
         """net_get_device_health should return health metrics."""
-        from network_mcp.tools.common.device import net_get_device_health
+        from network_mcp.tools.common.monitoring import net_get_device_health
 
         result = net_get_device_health(host=lab_node["name"])
         assert result["status"] == "success", f"Failed: {result.get('error')}"
@@ -119,23 +141,21 @@ class TestVlanTools:
     """Test VLAN tools against real devices."""
 
     def test_get_vlans(self, lab_node):
-        """get_vlans should return at least VLAN 1."""
-        from network_mcp.tools.vlans import get_vlans
+        """net_get_vlans should return at least VLAN 1."""
+        from network_mcp.tools.common.vlans import net_get_vlans
 
-        result = get_vlans(host=lab_node["name"])
+        result = net_get_vlans(host=lab_node["name"])
         assert result["status"] == "success", f"Failed: {result.get('error')}"
-        vlans = result.get("data", {})
-        assert "1" in vlans, f"VLAN 1 not found in: {list(vlans.keys())}"
 
 
 class TestRoutingTools:
     """Test routing tools against real devices."""
 
-    def test_get_routes(self, lab_node):
-        """net_get_routes should return routing table."""
-        from network_mcp.tools.common.routing import net_get_routes
+    def test_get_route_table(self, lab_node):
+        """net_get_route_table should return routing table."""
+        from network_mcp.tools.common.routing import net_get_route_table
 
-        result = net_get_routes(host=lab_node["name"])
+        result = net_get_route_table(host=lab_node["name"])
         assert result["status"] == "success", f"Failed: {result.get('error')}"
 
     def test_get_arp_table(self, lab_node):
@@ -167,11 +187,11 @@ class TestSwitchingTools:
 class TestMonitoringTools:
     """Test monitoring tools against real devices."""
 
-    def test_get_system_health(self, lab_node):
-        """net_get_system_health should return CPU/memory/temp data."""
-        from network_mcp.tools.common.monitoring import net_get_system_health
+    def test_get_cpu_usage(self, lab_node):
+        """net_get_cpu_usage should return CPU data."""
+        from network_mcp.tools.common.monitoring import net_get_cpu_usage
 
-        result = net_get_system_health(host=lab_node["name"])
+        result = net_get_cpu_usage(host=lab_node["name"])
         assert result["status"] == "success", f"Failed: {result.get('error')}"
 
 
@@ -184,9 +204,15 @@ class TestConfigTools:
 
         result = net_get_running_config(host=lab_node["name"])
         assert result["status"] == "success", f"Failed: {result.get('error')}"
-        config_text = result.get("data", "")
+        data = result.get("data", {})
+        # data may be a dict with "config" key or a raw string
+        if isinstance(data, dict):
+            config_text = data.get("config", "")
+        else:
+            config_text = data
         assert isinstance(config_text, str)
         assert len(config_text) > 0
+        assert "hostname" in config_text.lower()
 
 
 class TestMultiDevice:

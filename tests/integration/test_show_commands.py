@@ -95,10 +95,11 @@ class TestShowCommandParsing:
         assert isinstance(data, dict)
 
     def test_show_logging(self, eos_driver):
-        """show logging should return log data."""
-        result = eos_driver.run_show(["show logging"])
+        """show logging should return log data (text encoding — JSON not supported on cEOS)."""
+        result = eos_driver.run_show(["show logging"], encoding="text")
         data = result[0]
-        assert isinstance(data, dict)
+        assert "output" in data
+        assert isinstance(data["output"], str)
 
     def test_show_inventory(self, eos_driver):
         """show inventory should return hardware inventory."""
@@ -110,11 +111,12 @@ class TestShowCommandParsing:
 class TestShowCommandEdgeCases:
     """Test edge cases in show command handling."""
 
-    def test_empty_result_command(self, eos_driver):
-        """Commands with no output should still return valid structure."""
-        result = eos_driver.run_show(["show interfaces Ethernet99"], encoding="json")
-        # Non-existent interface — EOS may return empty or error
-        assert isinstance(result, list)
+    def test_invalid_interface_raises_error(self, eos_driver):
+        """Non-existent interface should raise CommandError on real EOS."""
+        import pyeapi.eapilib
+
+        with pytest.raises(pyeapi.eapilib.CommandError):
+            eos_driver.run_show(["show interfaces Ethernet99"], encoding="json")
 
     def test_text_encoding(self, eos_driver):
         """Text encoding should return raw text output."""
