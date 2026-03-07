@@ -847,6 +847,9 @@ logger.debug("All tool modules loaded — readiness probe will report ready")
 
 # --- HTTP routes (available when using streamable-http transport) ---
 
+# Transport mode tracking — updated by main() before mcp.run()
+_transport_mode: str = "stdio"
+
 try:
     from starlette.requests import Request  # noqa: E402
     from starlette.responses import JSONResponse, Response  # noqa: E402
@@ -862,6 +865,8 @@ try:
             conn_mgr, command_cache, circuit_breaker_registry, metrics_collector, get_module_status()
         )
         health["config"] = get_safe_config(settings)
+        health["connected_device_count"] = len(conn_mgr.list_devices())
+        health["transport_mode"] = _transport_mode
         status_code = 200 if health["status"] == "healthy" else 503
         return JSONResponse(health, status_code=status_code)
 
@@ -1065,7 +1070,9 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 def main():
     """Entry point for the MCP server."""
+    global _transport_mode
     args = _parse_args()
+    _transport_mode = args.transport
     logger.info(f"Starting MCP server with transport: {args.transport}")
     mcp.run(transport=args.transport)
 
