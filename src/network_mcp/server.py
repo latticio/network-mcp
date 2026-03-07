@@ -845,6 +845,11 @@ from .health import mark_modules_loaded  # noqa: E402
 mark_modules_loaded()
 logger.debug("All tool modules loaded — readiness probe will report ready")
 
+# Annotate all registered tools with x-tool-group metadata
+from .tools.meta import annotate_tools_with_groups  # noqa: E402
+
+annotate_tools_with_groups(mcp)
+
 # --- HTTP routes (available when using streamable-http transport) ---
 
 # Transport mode tracking — updated by main() before mcp.run()

@@ -297,6 +297,8 @@ _MULTI_DEVICE_TOOLS = {
     "eos_list_tool_categories",
     "eos_list_tools_in_category",
     "eos_load_tool_category",
+    "net_list_tool_categories",
+    "net_load_tool_category",
     # Utility tools (no host parameter)
     "eos_export_report",
     # Audit export tool (no host parameter)
